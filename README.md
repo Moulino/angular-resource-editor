@@ -5,7 +5,7 @@ Angular Resource Editor is a module for the AngularJS framework. It allows you t
 The editor display the list of objects in a table element and provides tools to add, edit or delete resource objects.
 It performs the requests to the server through the module 'angular-resource'.
 
-This module is still developping. Please excuse me for my poor english.
+This module is still developing. Please, excuse me for my poor english.
 
 ## Module setup
 The easiest way to install the angular-resource-dialog module is via Bower:
@@ -28,6 +28,7 @@ You can then include angular-resource-dialog script after including its dependen
 And you can include the stylesheets :
 
 ```html
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="bower_components/angular-material/angular-material.css">
 <link rel="stylesheet" href="bower_components/angular-resource-editor/angular-resource-editor.css">
 ```
@@ -64,7 +65,7 @@ Then you need to configure the mlResources provider
 ```javascript
 app.config(function(mlResourcesProvider) {
 
-    mlResourcesProvider.addRessource({
+    mlResourcesProvider.addResource({
         name: 'categories',
         url: 'api/categories/:id.json', // for more explains, see angular-resource documentation
         url_params: {id: '@id'}, // url parameters for $resource service
@@ -115,6 +116,7 @@ app.config(function(mlResourcesProvider) {
                 label: 'Date',
                 model: 'date',
                 type: 'date',
+                date_format: 'dd/MM/yyy', // date format to displaying it in the table element
                 required: true
             }
         ]                
