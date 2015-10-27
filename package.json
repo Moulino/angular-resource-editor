@@ -1,0 +1,31 @@
+{
+  "name": "angular-resource-editor",
+  "version": "0.0.1",
+  "description": "Manage a resource in dialog from a rest api.",
+  "main": "angular-resource-editor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moulino/angular-resource-editor.git"
+  },
+  "keywords": [
+    "angular",
+    "rest",
+    "dialog",
+    "module"
+  ],
+  "author": "Emmanuel Olive",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Moulino/angular-resource-editor/issues"
+  },
+  "homepage": "https://github.com/Moulino/angular-resource-editor#readme",
+  "devDependencies": {
+    "karma": "^0.13.11",
+    "karma-chrome-launcher": "^0.2.1",
+    "karma-jasmine": "^0.3.6",
+    "karma-jasmine-matchers": "^2.0.0-beta2"
+  }
+}
