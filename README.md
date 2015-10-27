@@ -1,4 +1,4 @@
-# angular-resource-dialog
+# angular-resource-editor
 
 Angular Resource Editor is a module for the AngularJS framework. It allows you to manage resource objects in a dialog box or directly in a template.
  
