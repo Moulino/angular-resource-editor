@@ -28,26 +28,59 @@
     };
 
     /*
-     * Angular resource transformers for the xhr requests.
-     */
-    var mlResourceTransformers = {
-        request: function (data) {
-            var obj = angular.copy(data);
-
-            forEach(obj, function (value, key) {
-                if (isObject(value) && isDefined(value.id)) {
-                    obj[key] = value.id;
-                }
-            });
-
-            return toJson(obj);
-        }
-    };
-
-    /*
      * Module declaration
      */
     var module = angular.module('mlResourceEditor', ['ngResource', 'ngMaterial']);
+
+    module.factory('mlUtils', function() {
+        var dateIso8601Pattern = /(\d{4})\D?(0[1-9]|1[0-2])\D?([12]\d|0[1-9]|3[01])/;
+        var dateIso8601Regex = new RegExp(dateIso8601Pattern);
+
+        var service = {
+            /*
+             * Converts dates in
+             */
+            convertDates: function(obj) {
+                forEach(obj, function(value, key) {
+                    if(isObject(value)) {
+                        service.convertDates(value);
+                    }
+
+                    else if(true === dateIso8601Regex.test(value)) {
+                        obj[key] = new Date(value);
+                    }
+                });
+            }
+        };
+
+        return service;
+    });
+
+    /*
+     * Angular resource transformers for the xhr requests.
+     */
+    module.factory('mlResourceTransformers', function(mlUtils) {
+       return {
+           request: function (data) {
+               var obj = angular.copy(data);
+
+               forEach(obj, function (value, key) {
+                   if (isObject(value) && isDefined(value.id)) {
+                       obj[key] = value.id;
+                   }
+               });
+
+               return toJson(obj);
+           },
+
+           response: function(data) {
+               var obj = fromJson(data);
+
+               mlUtils.convertDates(obj);
+               return obj;
+           }
+        };
+    });
 
     /*
      * This service manages resources, collections and parameters.
@@ -63,10 +96,10 @@
             options[name] = opts;
         };
 
-        this.$get = ['$resource', '$window', '$rootScope', '$mdDialog', function ($resource, $window, $rootScope, $mdDialog) {
+        this.$get = function ($resource, $window, $rootScope, $mdDialog, mlResourceTransformers) {
             var templateDialog =
                 '<md-dialog class="md-dialog">'+
-                    '<md-dialog-content>'+
+                    '<md-dialog-content class="md-dialog-content">'+
                         '<div ng-hide="item">'+templateList+'</div>'+
                         '<div ng-show="item" ml-resource-form></div>'+
                     '</md-dialog-content>'+
@@ -79,10 +112,12 @@
                         resources[name] = $resource(opts.url, opts.url_params, {
                             'query': {
                                 isArray: true,
-                                method: 'GET'
+                                method: 'GET',
+                                transformResponse: mlResourceTransformers.response
                             },
                             'get': {
-                                method: 'GET'
+                                method: 'GET',
+                                transformResponse: mlResourceTransformers.response
                             },
                             'update': {
                                 method: 'PUT',
@@ -139,6 +174,10 @@
 
                     scope.formIsDialog = false; // the edition form will be displaying inline
 
+                    scope.close = function() {
+                        $mdDialog.hide();
+                    };
+
                     $mdDialog.show({
                         template: templateDialog,
                         controller: 'mlEditorController',
@@ -152,16 +191,16 @@
                 }
             };
             return service;
-        }];
+        };
     });
 
-    module.factory('mlFormDialog', ['$mdDialog', function ($mdDialog) {
+    module.factory('mlFormDialog', function ($mdDialog) {
 
         var service = {
             open: function ($scope) {
                 var template =
                     '<md-dialog class="md-dialog">' +
-                        '<md-dialog-content>' + templateForm + '</md-dialog-content>' +
+                        '<md-dialog-content class="md-dialog-content">' + templateForm + '</md-dialog-content>' +
                     '</md-dialog>';
 
                 $mdDialog.show({
@@ -178,9 +217,9 @@
         };
 
         return service;
-    }]);
+    });
 
-    module.directive('mlResourceEditor', ['$controller', function($controller) {
+    module.directive('mlResourceEditor', function($controller) {
 
         return {
             restrict: 'A',
@@ -199,21 +238,18 @@
                 $controller('mlEditorController', locals);
             }
         }
-    }]);
+    });
 
     /* Directive for manage the row selection in the resource list */
     module.directive('mlResourceList', function () {
-
-        // returns the resource object selected
-        var itemSelected = function () {
-            return ($scope.rowSelected != null) ? $scope.items[$scope.rowSelected] : null;
-        };
 
         return {
             restrict: 'A',
             link: function (scope, elem) {
 
-                scope.itemSelected = itemSelected;
+                scope.itemSelected = function() {
+                    return (scope.rowSelected != null) ? scope.items[scope.rowSelected] : null;
+                };
 
                 elem.find('tbody').on('click', 'tr', function () {
 
@@ -241,7 +277,7 @@
     });
 
     /*
-     Filter the simple types of 'input' (text and number)
+     * Filter the simple types of 'input' (text and number)
      */
     module.filter('inInputTypes', [function () {
         var inputTypes = ['text', 'number'];
@@ -256,16 +292,17 @@
         };
     }]);
 
-    module.controller('mlEditorController', ['$scope', '$window', '$filter', 'mlResources', 'mlFormDialog', 'name', 'inline',
-        function ($scope, $window, $filter, mlResources, mlFormDialog, name, inline) {
+    module.controller('mlEditorController', function ($scope, $window, $filter, mlResources, mlFormDialog, name, inline) {
 
         $scope.item = null;
         $scope.items = mlResources.getCollection(name);
         $scope.loading = false;
         $scope.form_title = null;
         $scope.rowSelected = null;
+        $scope.inline = inline;
 
         var self = this;
+
         var Resource = mlResources.getResource(name);
         var options = mlResources.getOptions(name);
 
@@ -295,10 +332,11 @@
 
             // associates the item to an resource for select fields
             forEach($scope.fields, function (field) {
-                if (field.type === 'select' && isDefined(field.options)) {
+                if (field.type === 'select' && isDefined(field.select_resource)) {
                     var model = field.model;
                     var id = $scope.item[model].id;
-                    forEach(field.options, function (resource) {
+
+                    forEach(mlResources.getCollection(field.select_resource.collection), function (resource) {
                         if (resource.id === id) {
                             $scope.item[model] = resource;
                         }
@@ -336,8 +374,8 @@
             }
 
             // converts the date fields
-            if(field.type === 'datetime' && isDefined(field.date_format)) {
-                return $filter('date')(item[field.model], 'dd/MM/yyyy');
+            if(field.type === 'date' && isDefined(field.date_format)) {
+                return $filter('date')(item[field.model], field.date_format);
             }
 
             /*if(isDate(item[field.model])) {
@@ -346,9 +384,9 @@
 
             return item[field.model];
         };
-    }]);
+    });
 
-    module.controller('mlFormController', ['$scope', 'mlResources', 'mlFormDialog', function($scope, mlResources, mlFormDialog, mlSelect) {
+    module.controller('mlFormController', function($scope, mlResources, mlFormDialog) {
         // disable the add or edit action
         var close = function() {
             $scope.item = null;
@@ -394,18 +432,18 @@
         };
 
         $scope.getOptionText = function (field, option) {
-            var options = service.getOptions(field);
+            var options = mlResources.getOptions(field);
             var column = field.select_resource.column;
             return option[column];
         };
-    }]);
+    });
 
     var templateList =
         '<i ng-if="inline != true" class="md-icon rm-close material-icons" ng-click="close()">close</i>'+
 
         '<div class="rm-list">'+
             '<div>'+
-                '<table ng-resource-list>'+
+                '<table ml-resource-list>'+
                     '<caption>'+
                         '<span class="title">'+
                             '{{ title_list }} '+
@@ -452,7 +490,7 @@
                         '</md-select>'+
                     '</md-input-container>'+
 
-                    '<div ng-if="field.type == \'datetime\'">'+
+                    '<div ng-if="field.type == \'date\'">'+
                         '<md-datepicker ng-model="item[field.model]" md-placeholder="{{ field.label }}" ng-required="field.required === true" aria-label="datetime"></md-datepicker>'+
                     '</div>'+
 
