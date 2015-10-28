@@ -37,8 +37,9 @@
         var dateIso8601Regex = new RegExp(dateIso8601Pattern);
 
         var service = {
+
             /*
-             * Converts dates in
+             * Converts dates by traversing the object recursively
              */
             convertDates: function(obj) {
                 forEach(obj, function(value, key) {

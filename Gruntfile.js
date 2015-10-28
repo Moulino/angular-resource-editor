@@ -4,14 +4,14 @@ module.exports = function(grunt) {
         uglify: {
             target: {
                 files: {
-                    'dist/mlResourceEditor.min.js': ['src/mlResourceEditor.js']
+                    'mlResourceEditor.min.js': ['mlResourceEditor.js']
                 }
             }
         },
         cssmin: {
             target: {
                 files: {
-                    'dist/mlResourceEditor.min.css': ['src/mlResourceEditor.css']
+                    'mlResourceEditor.min.css': ['mlResourceEditor.css']
                 }
             }
         }

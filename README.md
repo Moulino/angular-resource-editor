@@ -17,20 +17,20 @@ bower install angular-resource-editor --save
 You can then include angular-resource-dialog script after including its dependencies, angular, angular-resource and angular-material :
 
 ```html
-<script src="bower_components/angular/angular.js"></script>
-<script src="bower_components/angular-resource/angular-resource.js"></script>
-<script src="bower_components/angular-animate/angular-animate.js"></script>
-<script src="bower_components/angular-aria/angular-aria.js"></script>
-<script src="bower_components/angular-material/angular-material.js"></script>
-<script src="bower_components/angular-resource-editor/angular-resource-editor.js"></script>
+<script src="bower_components/angular/angular.min.js"></script>
+<script src="bower_components/angular-resource/angular-resource.min.js"></script>
+<script src="bower_components/angular-animate/angular-animate.min.js"></script>
+<script src="bower_components/angular-aria/angular-aria.min.js"></script>
+<script src="bower_components/angular-material/angular-material.min.js"></script>
+<script src="bower_components/angular-resource-editor/angular-resource-editor.min.js"></script>
 ```
 
 And you can include the stylesheets :
 
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<link rel="stylesheet" href="bower_components/angular-material/angular-material.css">
-<link rel="stylesheet" href="bower_components/angular-resource-editor/angular-resource-editor.css">
+<link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
+<link rel="stylesheet" href="bower_components/angular-resource-editor/angular-resource-editor.min.css">
 ```
 
 ## Usage example
