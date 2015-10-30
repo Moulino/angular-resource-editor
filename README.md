@@ -35,7 +35,7 @@ And you can include the stylesheets :
 
 ## Usage example
 
-The easiest way to understant how this module works is to see it in action. In this section, we'll configure it for manage to resources on remote api : category and task.
+The easiest way to understand how this module works is to see it in action. In this section, we'll configure it for manage to resources on remote api : category and task.
 
 The category api returns a collection of objects like this :
 ```javascript

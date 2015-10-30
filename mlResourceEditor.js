@@ -15,7 +15,9 @@
         isFunction = angular.isFunction,
         fromJson = angular.fromJson,
         toJson = angular.toJson,
-        extend = angular.extend;
+        extend = angular.extend,
+        merge = angular.merge,
+        copy = angular.copy;
 
     /*
      * Default options for the controller scope
@@ -33,22 +35,23 @@
     var module = angular.module('mlResourceEditor', ['ngResource', 'ngMaterial']);
 
     module.factory('mlUtils', function() {
-        var dateIso8601Pattern = /(\d{4})\D?(0[1-9]|1[0-2])\D?([12]\d|0[1-9]|3[01])/;
-        var dateIso8601Regex = new RegExp(dateIso8601Pattern);
-
         var service = {
 
             /*
-             * Converts dates by traversing the object recursively
+             * Converts dates by traversing the object or array recursively
              */
-            convertDates: function(obj) {
+            rDateConvert: function(obj) {
                 forEach(obj, function(value, key) {
                     if(isObject(value)) {
-                        service.convertDates(value);
+                        service.rDateConvert(value);
                     }
 
-                    else if(true === dateIso8601Regex.test(value)) {
-                        obj[key] = new Date(value);
+                    else if(isString(value)) {
+                        var date = new Date(value);
+
+                        if(!isNaN(date.getDate())) {
+                            obj[key] = date;
+                        }
                     }
                 });
             }
@@ -60,10 +63,10 @@
     /*
      * Angular resource transformers for the xhr requests.
      */
-    module.factory('mlResourceTransformers', function(mlUtils) {
+    module.factory('mlResourceTransform', function(mlUtils) {
        return {
-           request: function (data) {
-               var obj = angular.copy(data);
+           request: function(data) {
+               var obj = toJson(data);
 
                forEach(obj, function (value, key) {
                    if (isObject(value) && isDefined(value.id)) {
@@ -71,15 +74,15 @@
                    }
                });
 
-               return toJson(obj);
+               return obj;
            },
 
-           response: function(data) {
-               var obj = fromJson(data);
+            response: function(data) {
+                var obj = fromJson(data);
 
-               mlUtils.convertDates(obj);
-               return obj;
-           }
+                mlUtils.rDateConvert(obj);
+                return obj;
+            }
         };
     });
 
@@ -91,15 +94,18 @@
         var resources = this.resources = {};
         var collections = this.collections = {};
         var options = this.options = {};
+        var self = this;
 
         this.addResource = function (opts) {
             var name = opts.name;
             options[name] = opts;
         };
 
-        this.$get = function ($resource, $window, $rootScope, $mdDialog, mlResourceTransformers) {
+
+
+        this.$get = function ($resource, $window, $rootScope, $mdDialog, mlResourceTransform) {
             var templateDialog =
-                '<md-dialog class="md-dialog">'+
+                '<md-dialog class="md-dialog ml-resource-dialog">'+
                     '<md-dialog-content class="md-dialog-content">'+
                         '<div ng-hide="item">'+templateList+'</div>'+
                         '<div ng-show="item" ml-resource-form></div>'+
@@ -109,33 +115,38 @@
             var service = {
                 init: function () {
 
-                    forEach(options, function (opts, name) {
-                        resources[name] = $resource(opts.url, opts.url_params, {
-                            'query': {
-                                isArray: true,
-                                method: 'GET',
-                                transformResponse: mlResourceTransformers.response
-                            },
-                            'get': {
-                                method: 'GET',
-                                transformResponse: mlResourceTransformers.response
-                            },
-                            'update': {
-                                method: 'PUT',
-                                transformRequest: mlResourceTransformers.request
-                            },
-                            'save': {
-                                method: 'POST',
-                                transformRequest: mlResourceTransformers.request
-                            }
-                        });
+                    var defaultActions = {
+                        'query': {
+                            isArray: true,
+                            method: 'GET',
+                            transformResponse: mlResourceTransform.response
+                        },
+                        'update': {
+                            method: 'PUT',
+                            transformRequest: mlResourceTransform.request
+                        },
+                        'save': {
+                            method: 'POST',
+                            transformRequest: mlResourceTransform.request
+                        }
+                    };
 
+                    forEach(options, function (opts, name) {
+
+                        var actions = {};
+                        merge(actions, defaultActions, opts.actions);
+
+                        resources[name] = $resource(opts.url, opts.url_params, actions);
                         collections[name] = [];
                         service.load(name);
                     });
                 },
 
                 load: function (name) {
+                    if(isUndefined(name)) {
+                        throw "The function load() from mlResources service requires the 'name' attribut.";
+                    }
+
                     var resource = service.getResource(name);
                     var collection = service.getCollection(name);
 
@@ -200,7 +211,7 @@
         var service = {
             open: function ($scope) {
                 var template =
-                    '<md-dialog class="md-dialog">' +
+                    '<md-dialog class="md-dialog ml-resource-dialog">' +
                         '<md-dialog-content class="md-dialog-content">' + templateForm + '</md-dialog-content>' +
                     '</md-dialog>';
 
@@ -295,31 +306,47 @@
 
     module.controller('mlEditorController', function ($scope, $window, $filter, mlResources, mlFormDialog, name, inline) {
 
-        $scope.item = null;
-        $scope.items = mlResources.getCollection(name);
-        $scope.loading = false;
-        $scope.form_title = null;
-        $scope.rowSelected = null;
-        $scope.inline = inline;
-
-        var self = this;
-
         var Resource = mlResources.getResource(name);
         var options = mlResources.getOptions(name);
 
+        $scope.item = null;
+        $scope.items = mlResources.getCollection(name);
+        $scope.loading = false;
+        $scope.rowSelected = null;
+        $scope.inline = inline;
+        $scope.options = options;
+        $scope.form_title = '';
+        $scope.name = name;
+
         extend($scope, defaultOpts, options);
+
+        this.create = function() {
+            var item = new Resource();
+            forEach($scope.fields, function(field) {
+                if(isDefined(field.type)) {
+                    if('date' === field.type) {
+                        item[field.model] = new Date();
+                    }
+                    else if('select' === field.type) {
+                        item[field.model] = null;
+                    }
+                    else if('number' === field.type) {
+                        item[field.model] = 0;
+                    }
+                    else if('text' === field.type) {
+                        item[field.model] = '';
+                    }
+                }
+            });
+            return item;
+        };
+
+        var self = this;
 
         // creates a new object resource
         $scope.add = function () {
             $scope.form_title = $scope.title_add;
-            $scope.item = new Resource();
-
-            // initializes the fields of type 'datetime' to current date
-            forEach($scope.fields, function (field) {
-                if (field.type === 'datetime') {
-                    $scope.item[field.model] = new Date();
-                }
-            });
+            $scope.item = self.create();
 
             if(true === inline) {
                 mlFormDialog.open($scope);
@@ -329,7 +356,7 @@
         // edits the resource object currently selected
         $scope.edit = function () {
             $scope.form_title = $scope.title_edit;
-            $scope.item = $scope.itemSelected();
+            $scope.item = copy($scope.itemSelected());
 
             // associates the item to an resource for select fields
             forEach($scope.fields, function (field) {
@@ -379,10 +406,6 @@
                 return $filter('date')(item[field.model], field.date_format);
             }
 
-            /*if(isDate(item[field.model])) {
-                return moment(item[field.model]).format('L');
-            }*/
-
             return item[field.model];
         };
     });
@@ -397,17 +420,18 @@
             }
         };
 
+        // sets the title
+        //$scope.form_title = isDefined($scope.item.id) ? $scope.options.title_edit : $scope.options.title_add;
+
         $scope.cancel = close;
 
         // submits the add or edit request
         $scope.submit = function() {
 
-            var scope = $scope;
-
             if (angular.isDefined($scope.item.id)) { // if id is defined, then the request is an edition
                 $scope.item.$update()
                     .then(function () {
-                        CollectionHandler.load();
+                        mlResources.load($scope.name);
                         $scope.rowSelected = null;
                         close();
                     }, function (err) {
@@ -417,7 +441,7 @@
             } else { // else the request is an addition
                 $scope.item.$save()
                     .then(function () {
-                        CollectionHandler.load();
+                        mlResources.load($scope.name);
                         close();
                     }, function (err) {
                         console.log(err);
@@ -426,7 +450,6 @@
         };
 
         $scope.getOptions = function (field) {
-            //service.checkType(field);
             if (isDefined(field.select_resource)) {
                 return mlResources.getCollection(field.select_resource.collection);
             }
@@ -442,11 +465,11 @@
     var templateList =
         '<i ng-if="inline != true" class="md-icon rm-close material-icons" ng-click="close()">close</i>'+
 
-        '<div class="rm-list">'+
+        '<div class="ml-resource-list">'+
             '<div>'+
                 '<table ml-resource-list>'+
                     '<caption>'+
-                        '<span class="title">'+
+                        '<span class="ml-list-title">'+
                             '{{ title_list }} '+
                             '<span class="loading" ng-show="loading">( Chargement en cours ... )</span>'+
                         '</span>'+
@@ -474,40 +497,41 @@
         '</div>';
 
     var templateForm =
-        '<div>'+
-            '<i ng-if="inline != true" class="md-icon rm-close material-icons" ng-click="close()">close</i>'+
-            '<form name="rscform">'+
-                '<div ng-repeat="field in fields">'+
+        '<i ng-if="inline != true" class="md-icon rm-close material-icons" ng-click="close()">close</i>'+
+        '<div class="ml-form-title">'+
+            '{{ form_title }}'+
+        '</div>'+
+        '<form name="rscform">'+
+            '<div ng-repeat="field in fields">'+
 
-                    '<md-input-container ng-if="field.type|inInputTypes">'+
-                        '<label>{{ field.label }}</label>'+
-                        '<input name="{{ field.model }}" type="{{ field.type }}" ng-model="item[field.model]" ng-required="field.required === true"/>'+
-                    '</md-input-container>'+
+                '<md-input-container class="md-block" ng-if="field.type|inInputTypes">'+
+                    '<label>{{ field.label }}</label>'+
+                    '<input name="{{ field.model }}" type="{{ field.type }}" ng-model="item[field.model]" ng-required="field.required === true"/>'+
+                '</md-input-container>'+
 
-                    '<md-input-container ng-if="field.type == \'select\'">'+
-                        '<label>{{ field.label }}</label>'+
-                        '<md-select ng-model="item[field.model]" ng-required="field.required === true">'+
-                            '<md-option ng-repeat="option in getOptions(field)" ng-value="option">{{ getOptionText(field, option) }}</md-option>'+
-                        '</md-select>'+
-                    '</md-input-container>'+
+                '<md-input-container class="md-block" ng-if="field.type == \'select\'">'+
+                    '<label>{{ field.label }}</label>'+
+                    '<md-select ng-model="item[field.model]" ng-required="field.required === true">'+
+                        '<md-option ng-repeat="option in getOptions(field)" ng-value="option">{{ getOptionText(field, option) }}</md-option>'+
+                    '</md-select>'+
+                '</md-input-container>'+
 
-                    '<div ng-if="field.type == \'date\'">'+
-                        '<md-datepicker ng-model="item[field.model]" md-placeholder="{{ field.label }}" ng-required="field.required === true" aria-label="datetime"></md-datepicker>'+
-                    '</div>'+
-
-                    '<md-input-container ng-if="field.type == \'textarea\'">'+
-                        '<label>{{ field.label }}</label>'+
-                        '<textarea ng-model="item[field.model]" columns="1" md-max-length="150"></textarea>'+
-                    '</md-input-container>'+
-
+                '<div ng-if="field.type == \'date\'">'+
+                    '<md-datepicker ng-model="item[field.model]" md-placeholder="{{ field.label }}" ng-required="field.required === true" aria-label="datetime"></md-datepicker>'+
                 '</div>'+
 
-                '<div class="md-actions">'+
-                    '<md-button class="md-accent md-raised rm-button gray" ng-click="cancel()">Annuler</md-button>'+
-                    '<md-button class="md-primary md-raised rm-button green" type="submit" ng-click="submit()">Ok</md-button>'+
-                '</div>'+
+                '<md-input-container class="md-block" ng-if="field.type == \'textarea\'">'+
+                    '<label>{{ field.label }}</label>'+
+                    '<textarea ng-model="item[field.model]" columns="1" md-max-length="150"></textarea>'+
+                '</md-input-container>'+
 
-            '</form>'+
-        '</div>';
+            '</div>'+
+
+            '<div class="md-actions">'+
+                '<md-button class="md-accent md-raised rm-button" ng-click="cancel()">Annuler</md-button>'+
+                '<md-button class="md-primary md-raised rm-button" type="submit" ng-click="submit()">Ok</md-button>'+
+            '</div>'+
+
+        '</form>';
 
 })(angular);
