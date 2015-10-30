@@ -1,3 +1,46 @@
+describe('mlUtils factory : ', function() {
+    var service;
+
+    beforeEach(module('mlResourceEditor'));
+    beforeEach(inject(function(mlUtils) {
+        service = mlUtils;
+    }));
+
+    describe('rDateConvert', function() {
+        it('should converts date string', function() {
+            var fixture = {tdate: '10/06/2015'};
+
+            service.rDateConvert(fixture);
+            expect(fixture.tdate).toBeDate();
+        });
+
+        it('should not converts wrong date string', function() {
+            var fixture = {tdate: 'test'};
+            service.rDateConvert(fixture);
+
+            expect(fixture.tdate).toBeString();
+        });
+
+        it('should converts date string deeply', function() {
+            var fixture = {
+                ttext: 'test',
+                obj: {
+                    tdate: '10-05-2014'
+                }
+            };
+            service.rDateConvert(fixture);
+
+            expect(fixture.obj.tdate).toBeDate();
+        });
+
+        it('should not converts integer', function() {
+            var fixture = {tdate: 1};
+            service.rDateConvert(fixture);
+            expect(fixture.tdate).toBeNumber();
+        });
+    });
+});
+
 describe('inInputTypes filter', function() {
     var $filter;
 
