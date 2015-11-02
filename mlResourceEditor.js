@@ -384,7 +384,7 @@
                 var item = $scope.itemSelected();
                 item.$remove()
                     .then(function () {
-                        CollectionHandler.load();
+                        mlResources.load($scope.name);
                     }, function (err) {
                         $window.alert(err.statusText);
                     })
