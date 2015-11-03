@@ -65,8 +65,7 @@
      */
     module.factory('mlResourceTransform', function(mlUtils) {
        return {
-           request: function(data) {
-               var obj = toJson(data);
+           request: function(obj) {
 
                forEach(obj, function (value, key) {
                    if (isObject(value) && isDefined(value.id)) {
@@ -74,7 +73,7 @@
                    }
                });
 
-               return obj;
+               return toJson(obj);
            },
 
             response: function(data) {
