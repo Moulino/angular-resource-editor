@@ -340,40 +340,208 @@ describe('mlListSelection directive', function() {
 
 describe('mlEditorDialog factory', function() {
     var $mdDialog,
-        $rootElement,
+        $rootScope,
         mlEditorDialog,
-        mlResources;
+        mlResources,
+        testElement;
+
 
     beforeEach(module('mlResourceEditor'));
 
-    beforeEach(inject(function(_$mdDialog_, _$rootElement_, _mlEditorDialog_, _mlResources_) {
+    beforeEach(inject(function(_$mdDialog_, _$rootScope_,  _mlEditorDialog_, _mlResources_) {
         $mdDialog = _$mdDialog_;
-        $rootElement = _$rootElement_;
+        $rootScope = _$rootScope_;
         mlEditorDialog = _mlEditorDialog_;
         mlResources = _mlResources_;
 
+        testElement = angular.element('<div>');
+
+        var originalShow = $mdDialog.show; // save the original function
+        spyOn($mdDialog, 'show').and.callFake(function(options) {
+            options['parent'] = testElement;
+            originalShow(options);
+        });
+
         spyOn(mlResources, 'getOptions').and.returnValue({
-            title_add: 'test_title',
+            title_add: 'test_title_add',
+            title_edit: 'test_title_edit',
             fields: []
         });
+
         spyOn(mlResources, 'createResource');
     }));
 
     it('open should display dialog', function() {
-        spyOn($mdDialog, 'show');
-
         mlEditorDialog.open('tasks');
         expect($mdDialog.show).toHaveBeenCalled();
     });
 
-    it('open should display a dialog with a title', function() {
+    it('open should display a dialog for adding an item', function() {
+
         mlEditorDialog.open('tasks');
+        $rootScope.$apply();
 
-        var parent = $rootElement;
-        console.log(parent);
+        var mdContent = testElement.find('md-dialog-content');
+        var title = mdContent.find('.ml-editor-title').text();
 
-        var mdContainer = angular.element(parent[0].querySelector('.md-dialog-container'));
-        console.log(mdContainer);
-        //expect($('body')).toHaveClass('.md-dialog-is-showing');
-    })
+        expect(title).toEqual('test_title_add');
+    });
+
+    it('open should display a dialog for editing an item', function() {
+
+        mlEditorDialog.open('tasks', {id: 1});
+        $rootScope.$apply();
+
+        var mdContent = testElement.find('md-dialog-content');
+        var title = mdContent.find('.ml-editor-title').text();
+
+        expect(title).toEqual('test_title_edit');
+    });
+});
+
+describe('mlListDialog factory', function() {
+    var $mdDialog,
+        $rootScope,
+        mlListDialog,
+        mlResources;
+
+    var testElement = angular.element('<div>');
+
+    beforeEach(module('mlResourceEditor'));
+
+    beforeEach(inject(function(_$mdDialog_, _$rootScope_,  _mlListDialog_, _mlResources_) {
+        $mdDialog = _$mdDialog_;
+        $rootScope = _$rootScope_;
+        mlListDialog = _mlListDialog_;
+        mlResources = _mlResources_;
+
+        var originalShow = $mdDialog.show; // save the original function
+        spyOn($mdDialog, 'show').and.callFake(function(options) {
+            options['parent'] = testElement;
+            originalShow(options);
+        });
+
+        spyOn(mlResources, 'getOptions').and.returnValue({
+            title_list: 'test_title_list',
+            fields: [
+                {label: 'Id', model: 'id', type: 'number'},
+                {label: 'Name', model: 'name', type: 'text'}
+            ]
+        });
+
+        spyOn(mlResources, 'getCollection').and.returnValue(
+            [{id: 1, name: 'test1'}, {id: 2, name: 'test2'}]
+        );
+
+        spyOn(mlResources, 'createResource');
+    }));
+
+    it('open should display the dialog box', function() {
+        mlListDialog.open('tasks');
+        $rootScope.$apply();
+
+        var mdContent = testElement.find('md-dialog-content');
+        var title = mdContent.find('.ml-list-title').text();
+        var tbody = mdContent.find('table > tbody');
+        var rows = tbody.find('tr');
+        var id1 = tbody.find('tr:first-child td:first-child').text();
+        var name2 = tbody.find('tr:last-child td:last-child').text();
+
+        expect(title).toEqual('test_title_list');
+        expect(rows.length).toEqual(2);
+        expect(id1).toEqual('1');
+        expect(name2).toEqual('test2');
+    });
+});
+
+describe('mlEditorController', function() {
+    var $mdDialog,
+        $controller,
+        mlResources,
+        mlEditorController,
+        $scope;
+
+    beforeEach(module('mlResourceEditor'));
+
+    beforeEach(inject(function(_$mdDialog_, _$controller_, _mlResources_) {
+        $mdDialog = _$mdDialog_;
+        $controller = _$controller_;
+        mlResources = _mlResources_;
+        $scope = {};
+
+        mlEditorController = $controller('mlEditorController', {
+            $scope: $scope,
+            $mdDialog: $mdDialog,
+            mlResources: mlResources
+        });
+    }));
+
+    it('ok should return the item', function() {
+        $scope.item = {id: 1};
+        spyOn($mdDialog, 'hide');
+        $scope.ok();
+        expect($mdDialog.hide).toHaveBeenCalledWith({id: 1});
+    });
+
+    it('getOptions return the defined options for submitted field', function() {
+        var categoryFixtures = [
+            {id: 1, name: 'category1'},
+            {id: 2, name: 'category2'}
+        ];
+
+        var field = {
+            select_resource: {
+                collection: 'categories'
+            }
+        };
+
+        spyOn(mlResources, 'getCollection').and.returnValue(categoryFixtures);
+
+        var options = $scope.getOptions(field);
+        expect(options).toEqual(categoryFixtures);
+    });
+
+    it('getOptionText should return the option text', function() {
+        var field = {select_resource: {column: 'name'}};
+        var option = {id: 1, name: 'category1'};
+
+        var text = $scope.getOptionText(field, option);
+        expect(text).toEqual('category1');
+    });
+});
+
+describe('mlListController', function() {
+    var $controller;
+
+    beforeEach(module('mlResourceEditor'));
+
+    beforeEach(inject(function(_$controller_) {
+        $controller = _$controller_;
+    }));
+
+    it('should write error on console if the mode is not defined', function() {
+        spyOn(console, 'error');
+        $controller('mlListController', {$scope: {}});
+
+        expect(console.error).toHaveBeenCalledWith("The mode value must be defined.")
+    });
+
+    it('should extend the current scope with the default options', function() {
+        var $scope = {mode: 'inline'};
+        $controller('mlListController', {$scope: $scope});
+
+        expect($scope.title_list).toEqual('Resource manager');
+    });
+
+    it('itemSelected should return an item', function() {
+        var fixtures = [{id: 1, name: 'name1'}, {id: 2, name: 'name2'}];
+        var $scope = {mode: 'inline'};
+
+        $controller('mlListController', {$scope: $scope});
+        $scope.items = fixtures;
+        $scope.rowSelected = 1;
+
+        var item = $scope.itemSelected();
+        expect(item).toEqual({id: 2, name: 'name2'});
+    });
 });

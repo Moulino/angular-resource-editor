@@ -118,6 +118,9 @@
         this.$get = function ($resource, $window, mlResourceTransform) {
 
             var service = {
+                /*
+                 * Initializes the resources from the options configured by the 'addResource' function.
+                 */
                 init: function () {
 
                     var defaultActions = {
@@ -147,6 +150,9 @@
                     });
                 },
 
+                /*
+                 * Loads the collection
+                 */
                 load: function (name) {
                     if(isUndefined(name)) {
                         throw "The function load() from mlResources service requires the 'name' attribut.";
@@ -269,11 +275,11 @@
         };
     });
 
-    module.factory('mlListDialog', function($rootScope, $rootElement, $mdDialog) {
+    module.factory('mlListDialog', function($rootScope, $mdDialog) {
         var dialogTemplate =
             "<md-dialog>"+
                 "<i class='md-icon ml-close-button material-icons' ng-click='cancel()'>close</i>"+
-                "<md-content-dialog class='md-dialog-content'>"+listTemplate+"</md-dialog-content>"+
+                "<md-dialog-content class='md-dialog-content'>"+listTemplate+"</md-dialog-content>"+
             "</md-dialog>";
 
         return {
@@ -286,8 +292,7 @@
                     template: dialogTemplate,
                     controller: 'mlListController',
                     scope: listScope,
-                    clickOutsideToClose: true,
-                    parent: $rootElement
+                    clickOutsideToClose: true
                 });
             },
             close: function() {
@@ -427,7 +432,7 @@
                 '<table ml-list-selection>'+
                     '<caption>'+
                         '<span class="ml-list-title">'+
-                            '{{ title_list }} '+
+                            '{{ title_list }}'+
                         '</span>'+
                         '<div class="ml-list-actions">'+
                             '<i class="md-icon material-icons green" ng-click="add()">add</i>'+
