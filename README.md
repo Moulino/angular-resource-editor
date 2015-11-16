@@ -137,23 +137,23 @@ And now, you can edit the resource in dialog box or directly into your template.
 
 ```javascript
 var app = angular.module('exampleApp');
-app.controller('MainCtrl', ['$scope', 'mlResources', function($scope, mlResources) {
+app.controller('MainCtrl', ['$scope', 'mlListDialog', function($scope, mlResources) {
 
-    $scope.openFactoryEditor = mlResources.displayInDialog('factories');
-    $scope.openTaskEditor = mlResources.displayInDialog('tasks');
+    $scope.openFactoryAction = mlListDialog.open('factories');
+    $scope.openTaskAction = mlListDialog.open('tasks');
     
 }]);
 ```
 
 ### Or displaying the editor directly in an angular template :
 
-You need to use the 'mlResourceEditor' directive with the attribute 'name' containing the name of the resource.
+You need to use the 'mlList' directive with the attribute 'name' containing the name of the resource.
 
 The code for your template :
 
 ```html
 <div ng-app="ExampleApp">
-    <div ml-resource-editor name="factories"></div>
-    <div ml-resource-editor name="tasks"></div>
+    <div ml-list name="factories"></div>
+    <div ml-list name="tasks"></div>
 </div>
 ```

@@ -201,68 +201,179 @@ describe('mlResources provider : ', function() {
         });
     });
 
-    describe('displayInDialog', function() {
-        var mdDialog;
-
-        beforeEach(inject(function(_$mdDialog_) {
-            mdDialog = _$mdDialog_;
-        }));
-
-        it('should call getOptions', function() {
-            spyOn(mlResources, 'getOptions').and.returnValue({});
-            mlResources.displayInDialog('tasks');
-
-            expect(mlResources.getOptions).toHaveBeenCalledWith('tasks');
+    describe('createResource', function() {
+        beforeEach(function() {
+            mlResources.init();
         });
 
-        it('should display a dialog box', function() {
-            spyOn(mdDialog, 'show');
-            mlResources.displayInDialog('tasks');
+        it('should return a new resource', function() {
+            var resource = mlResources.createResource('tasks');
+            expect(resource).toHaveMethod('$query');
+        });
 
-            expect(mdDialog.show).toHaveBeenCalled();
+        it('should create a new member of type "date', function() {
+            spyOn(mlResources, 'getOptions').and.returnValue({fields: [{model: 'date', type: 'date'}]});
+
+            var resource = mlResources.createResource('tasks');
+            expect(resource).toHaveMember('date');
+            expect(resource.date).toBeDate();
+        });
+
+        it('should create a new member from type "select" and equal to null', function() {
+            spyOn(mlResources, 'getOptions').and.returnValue({fields: [{model: 'category', type: 'select'}]});
+
+            var resource = mlResources.createResource('tasks');
+            expect(resource).toHaveMember('category');
+            expect(resource.category).toBeNull();
+        });
+
+        it('should create a new integer equal to 0', function() {
+            spyOn(mlResources, 'getOptions').and.returnValue({fields: [{model: 'test', type: 'number'}]});
+
+            var resource = mlResources.createResource('tasks');
+            expect(resource).toHaveMember('test');
+            expect(resource.test).toEqual(0);
+        });
+
+        it('should create a new member with an empty string', function() {
+            spyOn(mlResources, 'getOptions').and.returnValue({fields: [{model: 'test', type: 'text'}]});
+
+            var resource = mlResources.createResource('tasks');
+            expect(resource).toHaveMember('test');
+            expect(resource.test).toBeEmptyString();
         });
     });
 });
 
-describe('mlFormDialog factory : ', function() {
-    var mlFormDialog, $mdDialog;
+describe('mlList directive', function() {
+    var $compile,
+        $rootScope,
+        mlResources;
 
     beforeEach(module('mlResourceEditor'));
-    beforeEach(inject(function(_mlFormDialog_, _$mdDialog_) {
-        mlFormDialog = _mlFormDialog_;
-        $mdDialog = _$mdDialog_;
+
+    beforeEach(inject(function(_$compile_, _$rootScope_, _mlResources_) {
+        $compile = _$compile_;
+        $rootScope = _$rootScope_;
+        mlResources = _mlResources_;
     }));
 
-    describe('open', function() {
-        it('should display dialog', function() {
-            spyOn($mdDialog, 'show');
-            mlFormDialog.open();
-            expect($mdDialog.show).toHaveBeenCalled();
-        });
+    it('should include list template', function() {
+        var node = $compile("<div ml-list name='tasks'></div>")($rootScope);
+        $rootScope.$digest();
+
+        expect(node).toContainElement('.ml-list');
+
+        var scope = node.isolateScope();
+        expect(scope).toHaveMember('name');
+        expect(scope.name).toEqual('tasks');
     });
 
-    describe('close', function() {
-        it('should hide dialog', function() {
-            spyOn($mdDialog, 'hide');
-            mlFormDialog.close();
-            expect($mdDialog.hide).toHaveBeenCalled();
+    it('should display items', function() {
+        spyOn(mlResources, 'getOptions').and.returnValue({
+            fields: [
+                {label: 'Id', model: 'id', type: 'number'},
+                {label: 'Name', model: 'name',type: 'text'}
+            ]
         });
+        spyOn(mlResources, 'getCollection').and.returnValue([
+            {id: 1, name: 'task1'},
+            {id: 2, name: 'task2'}
+        ]);
+
+        var node = $compile("<div ml-list name='tasks'></div>")($rootScope);
+        $rootScope.$digest();
+
+        expect(node.find('tbody>tr')).toHaveLength(2);
+        expect(node.find('tbody>tr:first-child>td:first-child')).toHaveText(1);
+        expect(node.find('tbody>tr:last-child>td:last-child')).toHaveText('task2');
+    });
+
+    it('should display title', function() {
+        spyOn(mlResources, 'getOptions').and.returnValue({
+            title_list: 'Test_title'
+        });
+        spyOn(mlResources, 'getCollection').and.returnValue([]);
+
+        var node = $compile("<div ml-list name='tasks'></div>")($rootScope);
+        $rootScope.$digest();
+
+        expect(node.find('.ml-list-title')).toHaveText('Test_title');
     });
 });
 
-describe('mlResourceEditor directive : ', function() {
+describe('mlListSelection directive', function() {
     var $compile,
-        $rootScope;
+        $rootScope,
+        element;
 
     beforeEach(module('mlResourceEditor'));
+
     beforeEach(inject(function(_$compile_, _$rootScope_) {
         $compile = _$compile_;
         $rootScope = _$rootScope_;
+
+        var template =
+            '<div ml-list-selection >'+
+                '<table><tbody>'+
+                    '<tr><td>1</td></tr>'+
+                    '<tr><td>2</td></tr>'+
+                '</tbody></table>'+
+            '</div>';
+
+        $rootScope.rowSelected = null;
+        element = $compile(template)($rootScope);
     }));
 
-    it('should integrate template', function() {
-        var node = $compile("<div ml-resource-editor></div>");
-        $rootScope.$digest();
+    it('should select a row when it clicked', function() {
+        element.find('tr:last-child').trigger('click');
+        expect($rootScope.rowSelected).toEqual(1);
     });
 
+    it('should unselect a row when it receives a second click event', function() {
+        element.find('tr:last-child').trigger('click');
+        expect($rootScope.rowSelected).toEqual(1);
+        element.find('tr:last-child').trigger('click');
+        expect($rootScope.rowSelected).toEqual(null);
+    });
+});
+
+describe('mlEditorDialog factory', function() {
+    var $mdDialog,
+        $rootElement,
+        mlEditorDialog,
+        mlResources;
+
+    beforeEach(module('mlResourceEditor'));
+
+    beforeEach(inject(function(_$mdDialog_, _$rootElement_, _mlEditorDialog_, _mlResources_) {
+        $mdDialog = _$mdDialog_;
+        $rootElement = _$rootElement_;
+        mlEditorDialog = _mlEditorDialog_;
+        mlResources = _mlResources_;
+
+        spyOn(mlResources, 'getOptions').and.returnValue({
+            title_add: 'test_title',
+            fields: []
+        });
+        spyOn(mlResources, 'createResource');
+    }));
+
+    it('open should display dialog', function() {
+        spyOn($mdDialog, 'show');
+
+        mlEditorDialog.open('tasks');
+        expect($mdDialog.show).toHaveBeenCalled();
+    });
+
+    it('open should display a dialog with a title', function() {
+        mlEditorDialog.open('tasks');
+
+        var parent = $rootElement;
+        console.log(parent);
+
+        var mdContainer = angular.element(parent[0].querySelector('.md-dialog-container'));
+        console.log(mdContainer);
+        //expect($('body')).toHaveClass('.md-dialog-is-showing');
+    })
 });
