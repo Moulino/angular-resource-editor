@@ -1,0 +1,98 @@
+.ml-close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #999;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.ml-list {
+    margin-top: 5px;
+}
+
+.ml-list table {
+    width: 100%;
+    text-align: center;
+    border-spacing: 0;
+    border: 1px solid #555;
+    font-size: 0.8em;
+}
+
+.ml-list thead th {
+    text-align: center;
+    background-color: #0088D2;
+    color: white;
+}
+
+.ml-list td,
+.ml-list th {
+    border: 1px solid #222;
+    height: 20px;
+    line-height: 20px;
+    cursor: default;
+}
+
+.ml-list tr:after {
+    content: "";
+    width: 100%;
+    height: 10px;
+    background-color: green;
+}
+
+.ml-list table tr.selected {
+    background-color: #E5AD40;
+    color: white;
+}
+
+.ml-list caption {
+    position: relative;
+    height: 30px;
+    line-height: 30px;
+}
+
+.ml-list-title {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    font-weight: bold;
+    font-size: 1.4em;
+    color: #0088D2;
+}
+
+.ml-list-actions {
+    position: absolute;
+    background-color: #FFF;
+    right: 0;
+    height: 30px;
+}
+
+.ml-list-actions i {
+    cursor: pointer;
+}
+
+.ml-list-actions i[disabled] {
+    color: gray;
+}
+
+.ml-button {
+    border: none;
+    height: 40px;
+    border-radius: 5px;
+    font-family: SinkinSans_Regular;
+    font-size: 13px;
+    padding: 0 20px;
+    box-shadow: 2px 2px 4px #555;
+}
+
+.ml-editor-title {
+    color: #0088D2;
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid;
+}
+
+.ml-resource-dialog {
+    min-width: 400px;
+}

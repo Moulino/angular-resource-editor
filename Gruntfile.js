@@ -2,16 +2,59 @@ module.exports = function(grunt) {
 
     grunt.initConfig({
         uglify: {
+            options: {
+                mangle: false,
+            },
             target: {
                 files: {
-                    'mlResourceEditor.min.js': ['mlResourceEditor.js']
+                    'dist/mlResourceEditor.min.js': [
+                        'src/js/module.js',
+                        'src/js/controllers/**/*.js',
+                        'src/js/directives/**/*.js',
+                        'src/js/filters/**/*.js',
+                        'src/js/services/**/*.js',
+                        'src/js/templates/**/*.js'
+                    ]
                 }
             }
         },
+
         cssmin: {
             target: {
                 files: {
-                    'mlResourceEditor.min.css': ['mlResourceEditor.css']
+                    'dist/mlResourceEditor.min.css': ['src/css/styles.css']
+                }
+            }
+        },
+
+        karma: {
+            src: {
+                configFile: 'karma.conf.js',
+                singleRun: true
+            },
+            dist: {
+                options: {
+                    basePath: '',
+                    frameworks: [
+                        'jasmine',
+                        'jasmine-matchers',
+                        'jasmine-jquery-matchers'
+                    ],
+                    files: [
+                        'bower_components/angular/angular.js',
+                        'bower_components/angular-mocks/angular-mocks.js',
+                        'bower_components/angular-resource/angular-resource.js',
+                        'bower_components/angular-animate/angular-animate.js',
+                        'bower_components/angular-aria/angular-aria.js',
+                        'bower_components/angular-material/angular-material.js',
+                        'dist/mlResourceEditor.min.js',
+                        'test/**/*.js'
+                    ],
+                    reporters: ['progress'],
+                    port: 9876,
+                    colors: true,
+                    browsers: ['PhantomJS'],
+                    singleRun: true
                 }
             }
         }
@@ -19,7 +62,11 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-karma');
 
-    grunt.registerTask('default', ['uglify', 'cssmin']);
+    grunt.registerTask('default', ['dist']);
+    grunt.registerTask('dist', ['uglify', 'cssmin']);
+    grunt.registerTask('test', ['karma:src']);
+    grunt.registerTask('test.dist', ['karma:dist']);
 
 };

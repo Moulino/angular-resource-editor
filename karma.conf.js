@@ -25,8 +25,14 @@ module.exports = function(config) {
         'bower_components/angular-animate/angular-animate.js',
         'bower_components/angular-aria/angular-aria.js',
         'bower_components/angular-material/angular-material.js',
-        'mlResourceEditor.js',
-        'tests/*.js'
+        'src/js/module.js',
+        'src/js/controllers/**/*.js',
+        'src/js/directives/**/*.js',
+        'src/js/filters/**/*.js',
+        'src/js/services/**/*.js',
+        'src/js/templates/**/*.js',
+        //'dist/mlResourceEditor.min.js',
+        'test/**/*.js'
     ],
 
 
@@ -66,7 +72,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['PhantomJS', 'Chrome'],
 
 
     // Continuous Integration mode

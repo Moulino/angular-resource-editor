@@ -22,7 +22,7 @@ You can then include angular-resource-dialog script after including its dependen
 <script src="bower_components/angular-animate/angular-animate.min.js"></script>
 <script src="bower_components/angular-aria/angular-aria.min.js"></script>
 <script src="bower_components/angular-material/angular-material.min.js"></script>
-<script src="bower_components/angular-resource-editor/angular-resource-editor.min.js"></script>
+<script src="bower_components/angular-resource-editor/dist/angular-resource-editor.min.js"></script>
 ```
 
 And you can include the stylesheets :
@@ -30,7 +30,7 @@ And you can include the stylesheets :
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
-<link rel="stylesheet" href="bower_components/angular-resource-editor/angular-resource-editor.min.css">
+<link rel="stylesheet" href="bower_components/angular-resource-editor/dist/angular-resource-editor.min.css">
 ```
 
 ## Usage example
