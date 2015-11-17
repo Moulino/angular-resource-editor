@@ -363,9 +363,9 @@
                 item.$save()
                     .then(function () {
                         mlResources.load($scope.name);
-                        close();
+                        mlEditorDialog.close();
                     }, function (err) {
-                        console.log(err);
+                        console.error(err);
                     });
             }).finally(function() {
                 if($scope.mode === 'dialog') {
@@ -383,9 +383,9 @@
                     .then(function () {
                         mlResources.load($scope.name);
                         $scope.rowSelected = null;
-                        close();
+                        mlEditorDialog.close();
                     }, function (err) {
-                        console.log(err);
+                        console.error(err);
                     });
             }).finally(function() {
                 if($scope.mode === 'dialog') {
@@ -400,12 +400,9 @@
                 item.$remove()
                     .then(function () {
                         mlResources.load($scope.name);
-                    }, function (err) {
-                        $window.alert(err.statusText);
-                    })
-                    .finally(function () {
                         $scope.rowSelected = null;
-                        $scope.confirm = null;
+                    }, function (err) {
+                        console.error(err);
                     });
             }
         };
