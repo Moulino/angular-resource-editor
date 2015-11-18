@@ -9,6 +9,7 @@
 
 .ml-list {
     margin-top: 5px;
+    min-width: 400px;
 }
 
 .ml-list table {
