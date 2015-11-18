@@ -24,9 +24,6 @@
                     scope: editorScope,
                     clickOutsideToClose: true
                 });
-            },
-            close: function() {
-                $mdDialog.cancel();
             }
         };
     });

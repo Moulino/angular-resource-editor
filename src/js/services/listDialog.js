@@ -25,9 +25,6 @@
                     scope: listScope,
                     clickOutsideToClose: true
                 });
-            },
-            close: function() {
-                $mdDialog.hide();
             }
         };
     });

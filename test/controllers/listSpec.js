@@ -37,6 +37,7 @@ describe('mlListController', function() {
 
         var $rootScope,
             $scope,
+            $mdDialog,
             mockItem,
             dialogBoxDiffered,
             updateDiffered,
@@ -45,11 +46,12 @@ describe('mlListController', function() {
             mlResources;
 
 
-        beforeEach(inject(function($q, _$rootScope_, _mlEditorDialog_, _mlListDialog_, _mlResources_) {
+        beforeEach(inject(function($q, _$rootScope_, _$mdDialog_, _mlEditorDialog_, _mlListDialog_, _mlResources_) {
             mlEditorDialog = _mlEditorDialog_;
             mlListDialog = _mlListDialog_;
             mlResources = _mlResources_;
             $rootScope = _$rootScope_;
+            $mdDialog = _$mdDialog_;
 
             $scope = {
                 mode: 'dialog',
@@ -103,17 +105,6 @@ describe('mlListController', function() {
             $rootScope.$apply();
 
             expect(console.error).toHaveBeenCalledWith('error');
-        });
-
-        it('should close the dialog box if success', function() {
-            spyOn(mlEditorDialog, 'close');
-
-            $scope.add();
-            dialogBoxDiffered.resolve(mockItem);
-            updateDiffered.resolve();
-            $rootScope.$apply();
-
-            expect(mlEditorDialog.close).toHaveBeenCalled();
         });
     });
 
@@ -189,17 +180,6 @@ describe('mlListController', function() {
             $rootScope.$apply();
 
             expect(console.error).toHaveBeenCalledWith('error');
-        });
-
-        it('should close the dialog box if success', function() {
-            spyOn(mlEditorDialog, 'close');
-
-            $scope.edit();
-            dialogBoxDiffered.resolve(mockItem);
-            updateDiffered.resolve();
-            $rootScope.$apply();
-
-            expect(mlEditorDialog.close).toHaveBeenCalled();
         });
     });
 

@@ -3,7 +3,7 @@
 
     var module = angular.module('mlResourceEditor');
 
-    module.controller('mlListController', function($scope, $window, $filter, mlResources, mlEditorDialog, mlListDialog) {
+    module.controller('mlListController', function($scope, $window, $filter, $mdDialog, mlResources, mlEditorDialog, mlListDialog) {
         $scope.items = mlResources.getCollection($scope.name);
         $scope.loading = false;
         $scope.rowSelected = null;
@@ -24,6 +24,10 @@
         if(angular.isUndefined($scope.mode)) {
             console.error("The mode value must be defined.");
         }
+
+        $scope.cancel = function() {
+            $mdDialog.cancel();
+        };
 
         $scope.itemSelected = function() {
             return ($scope.rowSelected != null) ? $scope.items[$scope.rowSelected] : null;
@@ -53,7 +57,6 @@
                 item.$save()
                     .then(function () {
                         mlResources.load($scope.name);
-                        //mlEditorDialog.close();
                     }, function (err) {
                         console.error(err);
                     });
@@ -73,7 +76,6 @@
                     .then(function () {
                         mlResources.load($scope.name);
                         $scope.rowSelected = null;
-                        //mlEditorDialog.close();
                     }, function (err) {
                         console.error(err);
                     });
