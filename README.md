@@ -25,6 +25,17 @@ You can then include angular-resource-dialog script after including its dependen
 <script src="bower_components/angular-resource-editor/dist/angular-resource-editor.min.js"></script>
 ```
 
+You can use a CDN :
+
+```html
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-resource.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/0.11.2/angular-material.min.js"></script>
+<script src="https://github.com/Moulino/angular-resource-editor/blob/master/dist/mlResourceEditor.min.js"></script>
+```
+
 And you can include the stylesheets :
 
 ```html
