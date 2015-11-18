@@ -53,7 +53,7 @@
                 item.$save()
                     .then(function () {
                         mlResources.load($scope.name);
-                        mlEditorDialog.close();
+                        //mlEditorDialog.close();
                     }, function (err) {
                         console.error(err);
                     });
@@ -73,7 +73,7 @@
                     .then(function () {
                         mlResources.load($scope.name);
                         $scope.rowSelected = null;
-                        mlEditorDialog.close();
+                        //mlEditorDialog.close();
                     }, function (err) {
                         console.error(err);
                     });
