@@ -25,15 +25,15 @@ You can then include angular-resource-dialog script after including its dependen
 <script src="bower_components/angular-resource-editor/dist/angular-resource-editor.min.js"></script>
 ```
 
-You can use a CDN :
+or you include them from a CDN :
 
 ```html
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-resource.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-aria.min.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/angular_material/0.11.2/angular-material.min.js"></script>
-<script src="https://github.com/Moulino/angular-resource-editor/blob/master/dist/mlResourceEditor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-resource.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-animate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-aria.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.js"></script>
+<script src="https://cdn.rawgit.com/Moulino/angular-resource-editor/master/dist/mlResourceEditor.min.js"></script>
 ```
 
 And you can include the stylesheets :
@@ -41,7 +41,15 @@ And you can include the stylesheets :
 ```html
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
-<link rel="stylesheet" href="bower_components/angular-resource-editor/dist/angular-resource-editor.min.css">
+<link rel="stylesheet" href="bower_components/angular-resource-editor/dist/mlResourceEditor.min.css">
+```
+
+or include them from a CDN :
+
+```html
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.css">
+<link rel="stylesheet" href="https://cdn.rawgit.com/Moulino/angular-resource-editor/master/dist/mlResourceEditor.min.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 ```
 
 ## Usage example
@@ -94,7 +102,7 @@ app.config(function(mlResourcesProvider) {
         ]
     });
     
-    mlResourcesProvider.addResources({
+    mlResourcesProvider.addResource({
         name: 'tasks',
         url: 'api/tasks/:id.json', // for more explains, see angular-resource documentation
         url_params: {id: '@id'}, // url parameters for $resource service
@@ -148,7 +156,7 @@ And now, you can edit the resource in dialog box or directly into your template.
 
 ```javascript
 var app = angular.module('exampleApp');
-app.controller('MainCtrl', ['$scope', 'mlListDialog', function($scope, mlResources) {
+app.controller('MainCtrl', ['$scope', 'mlListDialog', function($scope, mlListDialog) {
 
     $scope.openFactoryAction = mlListDialog.open('factories');
     $scope.openTaskAction = mlListDialog.open('tasks');
