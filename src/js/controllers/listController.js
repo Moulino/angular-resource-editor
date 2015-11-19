@@ -34,7 +34,7 @@
         };
 
         $scope.normalizeResources = function(item) {
-            var normalized = copy(item);
+            var normalized = angular.copy(item);
             // associates the item to an resource for select fields
             angular.forEach($scope.fields, function (field) {
                 if (field.type === 'select' && angular.isDefined(field.select_resource)) {
