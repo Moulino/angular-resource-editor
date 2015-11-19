@@ -5,6 +5,8 @@ Angular Resource Editor is a module for the AngularJS framework. It allows you t
 The editor display the list of objects in a table element and provides tools to add, edit or delete resource objects.
 It performs the requests to the server through the module 'angular-resource'.
 
+[Example in JsFiddle](https://jsfiddle.net/moulino/3su98hqt/8/)
+
 This module is still developing. Please, excuse me for my poor english.
 
 ## Module setup
