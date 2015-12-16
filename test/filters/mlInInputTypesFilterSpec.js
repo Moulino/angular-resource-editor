@@ -1,7 +1,7 @@
 describe('inInputTypes filter', function() {
     var $filter;
 
-    beforeEach(module('mlResourceEditor'));
+    beforeEach(module('mlResourcesEditor'));
 
     beforeEach(inject(function(_$filter_) {
         $filter = _$filter_;

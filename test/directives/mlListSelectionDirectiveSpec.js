@@ -3,7 +3,7 @@ describe('mlListSelection directive', function() {
         $rootScope,
         element;
 
-    beforeEach(module('mlResourceEditor'));
+    beforeEach(module('mlResourcesEditor'));
 
     beforeEach(inject(function(_$compile_, _$rootScope_) {
         $compile = _$compile_;

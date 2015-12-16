@@ -1,0 +1,215 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.css">
+    <link rel="stylesheet" href="../src/css/styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        #tasks {
+            padding: 15px;
+        }
+
+        .categories {
+            margin: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div ng-app="App">
+        <div ng-controller="BaseController">
+            <md-button class="md-raised md-primary categories" ng-click="openCategories()">Catégories</md-button>
+        </div>
+
+        <div id="tasks" ml-list name="tasks"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-resource.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-animate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-aria.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-mocks.js"></script>
+
+    <script src="../src/js/module.js"></script>
+    <script src="../src/js/controllers/editorController.js"></script>
+    <script src="../src/js/controllers/listController.js"></script>
+    <script src="../src/js/directives/listDirective.js"></script>
+    <script src="../src/js/directives/listSelectionDirective.js"></script>
+    <script src="../src/js/directives/paginationDirective.js"></script>
+    <script src="../src/js/filters/inInputTypesFilter.js"></script>
+    <script src="../src/js/services/editorDialogFactory.js"></script>
+    <script src="../src/js/services/resourcesProvider.js"></script>
+    <script src="../src/js/services/listDialogFactory.js"></script>
+    <script src="../src/js/services/resourcesTransformFactory.js"></script>
+    <script src="../src/js/services/utilsFactory.js"></script>
+    <script src="../src/js/templates/editorTemplate.js"></script>
+    <script src="../src/js/templates/listTemplate.js"></script>
+
+    <script>
+        (function(angular) {
+            var app = angular.module('App', ['mlResourceEditor', 'ngMockE2E']);
+
+            app.config(function($compileProvider, mlResourcesProvider) {
+                $compileProvider.debugInfoEnabled(true);
+
+                mlResourcesProvider.addResource({
+                    name: 'categories',
+                    url: 'api/categories/:id.json', // for more explains, see angular-resource documentation
+                    url_params: {id: '@id'}, // url parameters for $resource service
+                    title_list: 'Categories',
+                    title_add: 'Add a category',
+                    title_edit: 'Edit the category',
+                    question_remove: 'Do you want to remove this category ?',
+                    fields: [
+                        {
+                            label: 'Name',
+                            model: 'name',
+                            type: 'text',
+                            required: true
+                        }
+                    ]
+                });
+
+                mlResourcesProvider.addResource({
+                    name: 'tasks',
+                    url: 'api/tasks/:id.json', // for more explains, see angular-resource documentation
+                    url_params: {id: '@id'}, // url parameters for $resource service
+                    title_list: 'Tasks',
+                    title_add: 'Add a task',
+                    title_edit: 'Edit the task',
+                    question_remove: 'Do you want to remove this task ?',
+                    fields: [
+                        {
+                            label: 'Category',
+                            model: 'category',
+                            type: 'select',
+                            // to_string is called when displaying the item in table element
+                            to_string: function(item) {
+                                return item.category.name;
+                            },
+                            select_resource: {
+                                collection: 'categories', // reference to the category resource
+                                column: 'name' // category member displaying in option node
+                            },
+                            required: true
+                        },
+                        {
+                            label: 'Name',
+                            model: 'name',
+                            type: 'text',
+                            required: true
+                        },
+                        {
+                            label: 'Date',
+                            model: 'date',
+                            type: 'date',
+                            date_format: 'dd/MM/yyyy', // date format to displaying it in the table element
+                            required: true
+                        }
+                    ]
+                });
+            });
+
+            app.run(function(mlResources) {
+                mlResources.init();
+            });
+
+            // only for tests (backend server simulation)
+            app.run(function($httpBackend) {
+                var categoryRegex = new RegExp('api/categories/([0-9]+).json');
+                var categoryId = 2;
+                var categories = [
+                    {id: 1, name: 'category1'},
+                    {id: 2, name: 'category2'}
+                ];
+
+                var taskRegex = new RegExp('api/tasks/([0-9]+).json');
+                var taskId = 5;
+                var tasks = [
+                    {id: 1, name: 'task1', date: '01-01-2015', category: {id: 1, name: 'category1'}},
+                    {id: 2, name: 'task2', date: '02-01-2015', category: {id: 2, name: 'category2'}},
+                    {id: 3, name: 'task3', date: '03-01-2015', category: {id: 1, name: 'category1'}},
+                    {id: 4, name: 'task4', date: '04-01-2015', category: {id: 2, name: 'category2'}},
+                    {id: 5, name: 'task5', date: '05-01-2015', category: {id: 1, name: 'category1'}}
+                ];
+
+                var getCategory = function(id) {
+                    for(var i=0; i<categories.length; i++) {
+                        if(categories[i].id === id) {
+                            return categories[i];
+                        }
+                    }
+                };
+                var removeCategory = function(id) {
+                    var pos;
+                    for(var i=0; i<categories.length; i++) {
+                        if(categories[i].id === id) {
+                            pos = i;
+                        }
+                    }
+                    categories.splice(pos, 1);
+
+                    // remove associated tasks
+                    angular.forEach(tasks, function(task) {
+                        if(task.category.id == id) {
+                            removeTask(task.id);
+                        }
+                    });
+                };
+
+                var removeTask = function(id) {
+                    var pos;
+                    for(var i=0; i<tasks.length; i++) {
+                        if(tasks[i].id === id) {
+                            pos = i;
+                        }
+                    }
+                    tasks.splice(pos, 1);
+                };
+
+                $httpBackend.whenGET('api/categories.json').respond(categories);
+                $httpBackend.whenPOST('api/categories.json').respond(function(method, url, data) {
+                    var category = angular.fromJson(data);
+                    category.id = ++categoryId;
+                    categories.push(category);
+                    return [200, category, {}];
+                });
+                $httpBackend.whenDELETE(function(url) {
+                    return categoryRegex.test(url);
+                }).respond(function(method, url, data, header) {
+                    var id = url.match(categoryRegex)[1];
+                    removeCategory(id);
+                    return [200];
+                });
+
+
+                $httpBackend.whenGET('api/tasks.json').respond(tasks);
+                $httpBackend.whenPOST('api/tasks.json').respond(function(method, url, data) {
+                    var task = angular.fromJson(data);
+                    task.id = ++taskId;
+                    task.category = getCategory(task.category);
+                    tasks.push(task);
+                    return [200, task, {}];
+                });
+                $httpBackend.whenDELETE(function(url) {
+                    return taskRegex.test(url);
+                }).respond(function(method, url, data, header) {
+                    var id = url.match(taskRegex)[1];
+                    removeTask(id);
+                    return [200];
+                });
+            });
+
+            app.controller('BaseController', function($scope, mlListDialog) {
+                $scope.openCategories = function() {
+                    mlListDialog.open('categories');
+                };
+            });
+
+        }(angular));
+    </script>
+</body>
+</html>

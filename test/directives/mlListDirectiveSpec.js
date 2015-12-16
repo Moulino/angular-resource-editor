@@ -3,7 +3,7 @@ describe('mlList directive', function() {
         $rootScope,
         mlResources;
 
-    beforeEach(module('mlResourceEditor'));
+    beforeEach(module('mlResourcesEditor'));
 
     beforeEach(inject(function(_$compile_, _$rootScope_, _mlResources_) {
         $compile = _$compile_;
@@ -12,6 +12,7 @@ describe('mlList directive', function() {
     }));
 
     it('should include list template', function() {
+        $rootScope.test = true;
         var node = $compile("<div ml-list name='tasks'></div>")($rootScope);
         $rootScope.$digest();
 

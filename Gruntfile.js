@@ -7,7 +7,7 @@ module.exports = function(grunt) {
             },
             target: {
                 files: {
-                    'dist/mlResourceEditor.min.js': [
+                    'dist/mlResourcesEditor.min.js': [
                         'src/js/module.js',
                         'src/js/controllers/**/*.js',
                         'src/js/directives/**/*.js',
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
         cssmin: {
             target: {
                 files: {
-                    'dist/mlResourceEditor.min.css': ['src/css/styles.css']
+                    'dist/mlResourcesEditor.min.css': ['src/css/styles.css']
                 }
             }
         },
@@ -41,13 +41,17 @@ module.exports = function(grunt) {
                         'jasmine-jquery-matchers'
                     ],
                     files: [
-                        'bower_components/angular/angular.js',
-                        'bower_components/angular-mocks/angular-mocks.js',
-                        'bower_components/angular-resource/angular-resource.js',
-                        'bower_components/angular-animate/angular-animate.js',
-                        'bower_components/angular-aria/angular-aria.js',
-                        'bower_components/angular-material/angular-material.js',
-                        'dist/mlResourceEditor.min.js',
+                        'bower_components/jquery/dist/jquery.min.js',
+                        'bower_components/angular/angular.min.js',
+                        'bower_components/angular-animate/angular-animate.min.js',
+                        'bower_components/angular-aria/angular-aria.min.js',
+                        'bower_components/angular-sanitize/angular-sanitize.min.js',
+                        'bower_components/angular-mocks/angular-mocks.min.js',
+                        'bower_components/restangular/restangular.min.js',
+                        'bower_components/lodash/lodash.min.js',
+                        'bower_components/angular-material/angular-material.min.js',
+                        'bower_components/angular-ui-select/angular-ui-select.min.js',
+                        'dist/mlResourcesEditor.min.js',
                         'test/**/*.js'
                     ],
                     reporters: ['progress'],

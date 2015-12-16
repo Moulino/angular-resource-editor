@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test Capm</title>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.css">
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.13.2/select.css">
+	<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.8.5/css/selectize.default.css">
+	<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="../src/css/styles.css">
+	<style type="text/css">
+		.invoices {
+			width: 50%;
+			margin: 20px auto;
+		}
+
+		.widget {
+			margin: 20px;
+		}
+	</style>
+</head>
+<body>
+
+	<div ng-app="myApp">
+		<div class="widget" ng-controller="AppController">
+			<md-button class="md-raised md-primary" ng-click="openSuppliers()">Fournisseurs</md-button>
+			<md-button class="md-raised md-primary" ng-click="openFactories()">Installations</md-button>
+			<md-button class="md-raised md-primary" ng-click="openMachines()">Machines</md-button>
+			<md-button class="md-raised md-primary" ng-click="openInvoicetypes()">Types de factures</md-button>
+		</div>
+
+		<div ml-list name="invoices" class="invoices"></div>
+	</div>
+
+    <script src="//localhost:35729/livereload.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.8/angular.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.8/angular-animate.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.8/angular-aria.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.8/angular-sanitize.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/restangular/1.5.1/restangular.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-select/0.13.2/select.js"></script>
+	<script type="text/javascript" src="../src/js/module.js"></script>
+	<script type="text/javascript" src="../src/js/controllers/mlListController.js"></script>
+	<script type="text/javascript" src="../src/js/controllers/mlPaginationController.js"></script>
+	<script type="text/javascript" src="../src/js/controllers/mlEditorController.js"></script>
+	<script type="text/javascript" src="../src/js/directives/mlListDirective.js"></script>
+	<script type="text/javascript" src="../src/js/directives/mlListSelectionDirective.js"></script>
+	<script type="text/javascript" src="../src/js/directives/mlPaginationDirective.js"></script>
+	<script type="text/javascript" src="../src/js/services/mlResources.js"></script>
+	<script type="text/javascript" src="../src/js/services/mlCollections.js"></script>
+	<script type="text/javascript" src="../src/js/services/mlEditorDialogFactory.js"></script>
+	<script type="text/javascript" src="../src/js/services/mlListDialogFactory.js"></script>
+	<script type="text/javascript" src="../src/js/templates/mlListTemplate.js"></script>
+	<script type="text/javascript" src="../src/js/templates/mlEditorTemplate.js"></script>
+	<script type="text/javascript" src="../src/js/filters/mlInInputTypesFilter.js"></script>
+	<script type="text/javascript">
+
+		(function(angular) {
+			"use strict";
+
+			var app = angular.module('myApp', ['mlResourcesEditor']);
+
+			app.config(function(mlResourcesProvider) {
+				mlResourcesProvider.setBaseUrl('http://fchapps-dev');
+				mlResourcesProvider.addResource({
+					name: 'suppliers',
+					uri: 'capm/api/suppliers',
+					title_list: "Liste des fournisseurs",
+					title_add: "Ajout d'un fournisseur",
+					title_edit: "Edition d'un fournisseur",
+					question_remove: "Voulez-vous supprimer ce fournisseur ?",
+					fields: [
+						{
+							label: 'Nom',
+							model: 'name',
+							type: 'text'
+						}
+					]
+				});
+
+				mlResourcesProvider.addResource({
+					name: 'factories',
+					uri: 'capm/api/factories',
+					title_list: 'Installations',
+					title_add: "Ajout d'une installation",
+					title_edit: "Edition de l'installation",
+					question_remove: "Voulez-vous supprimer cette installation ?",
+					fields: [
+						{
+							label: 'Nom',
+							model: 'name',
+							type: 'text',
+							required: true
+						}
+					]
+				});
+
+				mlResourcesProvider.addResource({
+					name: 'machines',
+					uri: 'capm/api/machines',
+					title_list: 'Machines',
+					title_add: "Ajout d'une machine",
+					title_edit: "Edition de la machine",
+					question_remove: "Voulez-vous supprimer cette machine ?",
+					fields: [
+						{
+							label: 'Nom',
+							model: 'name',
+							type: 'text',
+							required: true
+						},
+						{
+							label: 'Installation',
+							model: 'factory',
+							to_string: function(item) {
+								return item.factory.name;
+							},
+							type: 'select',
+							select_resource: {
+								resource: 'factories',
+								label: 'name',
+								params: {
+									itemsPerPage: 1000000
+								}
+							},
+							required: true
+						}
+					]
+				});
+
+				mlResourcesProvider.addResource({
+					name: 'invoicetypes',
+					uri: 'capm/api/invoicetypes',
+					title_list: "Types de factures",
+					title_add: "Ajout d'un type de facture",
+					title_edit: "Edition du type de facture",
+					question_remove: "Voulez-vous supprimer ce type de facture ?",
+					fields: 
+						[
+							{
+								label: 'Type',
+								model: 'type',
+								type: 'text',
+								required: true
+							}
+						]
+					});
+
+				mlResourcesProvider.addResource({
+					name: 'invoices',
+					uri: 'capm/api/invoices',
+					title_list: 'Factures',
+					title_add: "Ajout d'une facture",
+					title_edit: "Edition de la facture",
+					question_remove: "Voulez-vous supprimer cette facture ?",
+					fields: 
+						[
+							{
+								label: 'Fournisseur',
+								model: 'supplier',
+								to_string: function(item) {
+									return item.supplier.name;
+								},
+								type: 'select',
+								required: true,
+								select_resource: {
+									resource: 'suppliers',
+									label: 'name',
+									params: {
+										itemsPerPage: 1000000
+									}
+								}
+							},
+							{
+								label: 'Machine',
+								model: 'machine',
+								to_string: function(item) {
+									return item.machine.name;
+								},
+								type: 'select',
+								required: true,
+								select_resource: {
+									resource: 'machines',
+									label: 'name'
+								}
+							},
+							{
+								label: 'Installation',
+								model: 'factory',
+								to_string: function(item) {
+									return item.machine.factory.name;
+								},
+								type: 'select',
+								required: true,
+								select_resource: {
+									resource: 'factories',
+									label: 'name'
+								}
+							},
+							{
+								label: 'Montant',
+								model: 'amount',
+								type: 'number',
+								to_string: function(item) {
+									return item.amount + ' €';
+								},
+								required: true
+							},
+							{
+								label: 'Date',
+								model: 'date',
+								date_format: 'dd/MM/yyyy',
+								type: 'date',
+								required: true
+							},
+							{
+								label: 'Description',
+								model: 'description',
+								type: 'textarea',
+								required: true
+							},
+							{
+								label: 'Type',
+								model: 'invoicetype',
+								to_string: function(item) {
+									return item.invoicetype.type;
+								},
+								type: 'select',
+								required: true,
+								select_resource: {
+									resource: 'invoicetypes',
+									label: 'type'
+								}
+							}
+						]
+					});
+			});
+
+			app.run(function(mlResources) {
+				mlResources.init();
+			});
+
+			app.controller('AppController', function($scope, mlListDialog) {
+				$scope.openSuppliers = function() {
+					mlListDialog.open('suppliers');
+				};
+
+				$scope.openFactories = function() {
+					mlListDialog.open('factories');
+				};
+
+				$scope.openMachines = function() {
+					mlListDialog.open('machines');
+				};
+
+				$scope.openInvoicetypes = function() {
+					mlListDialog.open('invoicetypes');
+				};
+			});
+
+		}(angular));
+
+	</script>
+
+</body>
+</html>

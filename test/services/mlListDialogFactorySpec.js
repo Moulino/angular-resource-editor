@@ -6,7 +6,7 @@ describe('mlListDialog factory', function() {
 
     var testElement = angular.element('<div>');
 
-    beforeEach(module('mlResourceEditor'));
+    beforeEach(module('mlResourcesEditor'));
 
     beforeEach(inject(function(_$mdDialog_, _$rootScope_,  _mlListDialog_, _mlResources_) {
         $mdDialog = _$mdDialog_;

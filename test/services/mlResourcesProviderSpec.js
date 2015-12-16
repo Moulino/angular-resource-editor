@@ -3,7 +3,7 @@ describe('mlResources provider : ', function() {
     var provider;
     var mlResources;
 
-    beforeEach(module('mlResourceEditor', function(mlResourcesProvider) {
+    beforeEach(module('mlResourcesEditor', function(mlResourcesProvider) {
         provider = mlResourcesProvider;
         provider.addResource({
             name: 'tasks',

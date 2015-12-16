@@ -6,7 +6,7 @@ describe('mlEditorDialog factory', function() {
         testElement;
 
 
-    beforeEach(module('mlResourceEditor'));
+    beforeEach(module('mlResourcesEditor'));
 
     beforeEach(inject(function(_$mdDialog_, _$rootScope_,  _mlEditorDialog_, _mlResources_) {
         $mdDialog = _$mdDialog_;

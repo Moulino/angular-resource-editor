@@ -1,10 +1,7 @@
 (function(angular) {
 
-    "use strict";
+	"use strict";
 
-    /*
-     * Module declaration
-     */
-    angular.module('mlResourceEditor', ['ngResource', 'ngMaterial']);
+	angular.module('mlResourcesEditor', ['restangular', 'ngMaterial', 'ui.select', 'ngSanitize']);
 
 }(angular));

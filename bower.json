@@ -22,11 +22,17 @@
     "tests"
   ],
   "dependencies": {
-    "angular": "~1.4.7",
-    "angular-resource": "~1.4.7",
-    "angular-material": "master"
+    "jquery": "~2.1.0",
+    "angular": "~1.4.8",
+    "angular-animate": "~1.4.8",
+    "angular-aria": "~1.4.8",
+    "angular-sanitize": "~1.4.8",
+    "restangular": "~1.5.1",
+    "lodash": "~3.10.1",
+    "angular-material": "1.0.0-rc5",
+    "angular-ui-select": "~0.13.2"
   },
   "devDependencies": {
-    "angular-mocks": "~1.4.7"
+    "angular-mocks": "~1.4.8"
   }
 }

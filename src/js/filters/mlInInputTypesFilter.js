@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourceEditor');
+    var module = angular.module('mlResourcesEditor');
 
     /*
      * Filter the simple types of 'input' (text and number)
