@@ -7,7 +7,7 @@ module.exports = function(grunt) {
             },
             target: {
                 files: {
-                    'dist/mlResourcesEditor.min.js': [
+                    'dist/mlResourceEditor.min.js': [
                         'src/js/module.js',
                         'src/js/controllers/**/*.js',
                         'src/js/directives/**/*.js',
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
         cssmin: {
             target: {
                 files: {
-                    'dist/mlResourcesEditor.min.css': ['src/css/styles.css']
+                    'dist/mlResourceEditor.min.css': ['src/css/styles.css']
                 }
             }
         },
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
                         'bower_components/lodash/lodash.min.js',
                         'bower_components/angular-material/angular-material.min.js',
                         'bower_components/angular-ui-select/angular-ui-select.min.js',
-                        'dist/mlResourcesEditor.min.js',
+                        'dist/mlResourceEditor.min.js',
                         'test/**/*.js'
                     ],
                     reporters: ['progress'],
