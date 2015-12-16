@@ -1,20 +1,27 @@
 module.exports = function(grunt) {
 
     grunt.initConfig({
+
+        concat: {
+            script: {
+                src: [
+                    'src/js/module.js',
+                    'src/js/controllers/**/*.js',
+                    'src/js/directives/**/*.js',
+                    'src/js/filters/**/*.js',
+                    'src/js/services/**/*.js',
+                    'src/js/templates/**/*.js'
+                ],
+                dest: 'dist/mlResourceEditor.js',
+            }
+        },
         uglify: {
             options: {
                 mangle: false,
             },
             target: {
                 files: {
-                    'dist/mlResourceEditor.min.js': [
-                        'src/js/module.js',
-                        'src/js/controllers/**/*.js',
-                        'src/js/directives/**/*.js',
-                        'src/js/filters/**/*.js',
-                        'src/js/services/**/*.js',
-                        'src/js/templates/**/*.js'
-                    ]
+                    'dist/mlResourceEditor.min.js': ['dist/mlResourceEditor.js']
                 }
             }
         },
@@ -67,9 +74,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks('grunt-contrib-concat');
 
     grunt.registerTask('default', ['dist']);
-    grunt.registerTask('dist', ['uglify', 'cssmin']);
+    grunt.registerTask('compile', ['concat', 'uglify', 'cssmin']);
     grunt.registerTask('test', ['karma:src']);
     grunt.registerTask('test.dist', ['karma:dist']);
 
