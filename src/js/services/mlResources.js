@@ -69,7 +69,7 @@
                     Restangular.addRequestInterceptor(function(element, operation) {
                         if('post' == operation) {
                             angular.forEach(element, function(val, key) {
-                                if(angular.isObject(val)) {
+                                if(!angular.isDate(val) && angular.isObject(val)) {
                                     element[key] = val.value;
                                 };
                             });
