@@ -72,7 +72,7 @@
 			            return data;
 			        });
 
-                    Restangular.addRequestInterceptor(function(element, operation) {
+                    /*Restangular.addRequestInterceptor(function(element, operation) {
                         if('post' == operation) {
                             angular.forEach(element, function(val, key) {
                                 if(!angular.isDate(val) && angular.isObject(val)) {
@@ -81,7 +81,7 @@
                             });
                         }
                         return element;
-                    });
+                    });*/
 
                     angular.forEach(options, function (opts, name) {
                         resources[name] = Restangular.all(opts.uri);

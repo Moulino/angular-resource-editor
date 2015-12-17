@@ -5,9 +5,6 @@
         "<div class='ml-list'>\
             <table ml-list-selection>\
                 <caption>\
-                    <span class='ml-list-title'>\
-                        {{ title_list }}\
-                    </span>\
                     <div layout='row' layout-align='end center' class='ml-list-actions'>\
                         <md-button ng-click='add()' class='md-icon-button green'>\
                             <md-icon class='material-icons'>add</md-icon>\

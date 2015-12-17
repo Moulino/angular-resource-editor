@@ -16,7 +16,7 @@
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
                 editorScope.options = mlResources.getOptions(name);
-                editorScope.item = (isAdding) ? mlResources.createResource(name) : item;
+                editorScope.item = (isAdding) ? mlResources.createResource(name) : angular.copy(item);
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({

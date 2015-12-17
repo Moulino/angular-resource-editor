@@ -9,9 +9,15 @@
 
         var dialogTemplate = "\
             <md-dialog>\
-                <md-button ng-click='cancel()' class='md-icon-button ml-close-button'>\
-                    <md-icon class='material-icons'>close</md-icon>\
-                </md-button>\
+                <md-toolbar>\
+                    <div class=\"md-toolbar-tools\">\
+                        <span>{{ title_list }}</span>\
+                        <span flex></span>\
+                        <md-button ng-click=\"cancel()\">\
+                            <md-icon class=\"material-icons\">close</md-icon>\
+                        </md-button>\
+                    </div>\
+                </md-toolbar>\
                 <md-dialog-content class='md-dialog-content'>"+listTemplate+"</md-dialog-content>\
             </md-dialog>";
 

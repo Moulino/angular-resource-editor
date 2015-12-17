@@ -55,8 +55,8 @@
 			var item = $scope.itemSelected();
 
 			if(null != item) {
-				mlEditorDialog.open($scope.name, item).then(function() {
-					item.save().then(function() {
+				mlEditorDialog.open($scope.name, item).then(function(itemUpd) {
+					itemUpd.save().then(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);

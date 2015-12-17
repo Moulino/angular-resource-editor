@@ -23,13 +23,12 @@
             return field.select_options;
         };
 
-        $scope.refreshOptions = function(field, search) {
+        $scope.loadOptions = function(field) {
             if( angular.isDefined(field.select_resource) &&
                 angular.isDefined(field.select_resource.resource) &&
                 angular.isDefined(field.select_resource.label)) 
             {
                 var params = angular.merge({}, field.select_resource.params);
-                params[field.select_resource.label] = search;
 
                 var itemSelected = $scope.item[field.model];
 
@@ -45,9 +44,9 @@
 
                             field.select_options.push(option);
 
-                            if(angular.isDefined(itemSelected['@id'])) {
+                            if(null !== itemSelected && angular.isDefined(itemSelected['@id'])) {
                                 if(itemSelected['@id'] === item['@id']) {
-                                    $scope.item[field.model] = option;
+                                    $scope.item[field.model] = item['@id'];
                                 }
                             }
                         });
