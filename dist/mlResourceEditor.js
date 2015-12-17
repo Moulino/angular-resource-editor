@@ -30,23 +30,32 @@
             return field.select_options;
         };
 
-        $scope.refreshOptions = function(field, search) {
+        $scope.loadOptions = function(field) {
             if( angular.isDefined(field.select_resource) &&
                 angular.isDefined(field.select_resource.resource) &&
                 angular.isDefined(field.select_resource.label)) 
             {
                 var params = angular.merge({}, field.select_resource.params);
-                params[field.select_resource.label] = search;
+
+                var itemSelected = $scope.item[field.model];
 
                 field.select_options = [];
                 field.loading = true;
                 mlResources.get(field.select_resource.resource).getList(params)
                     .then(function(response) {
                         angular.forEach(response, function(item) {
-                            field.select_options.push({
+                            var option = {
                                 label: item[field.select_resource.label],
                                 value: item['@id']
-                            });
+                            };
+
+                            field.select_options.push(option);
+
+                            if(null !== itemSelected && angular.isDefined(itemSelected['@id'])) {
+                                if(itemSelected['@id'] === item['@id']) {
+                                    $scope.item[field.model] = item['@id'];
+                                }
+                            }
                         });
 
                     }, function(response) {
@@ -116,8 +125,8 @@
 			var item = $scope.itemSelected();
 
 			if(null != item) {
-				mlEditorDialog.open($scope.name, item).then(function() {
-					item.save().then(function() {
+				mlEditorDialog.open($scope.name, item).then(function(itemUpd) {
+					itemUpd.save().then(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);
@@ -148,11 +157,7 @@
 		$scope.getString = function(field, item) {
 
             if(angular.isFunction(field.to_string)) {
-            	if('select' == field.type) {
-            		return field.to_string(item['_'+field.model]);
-            	} else {
-            		return field.to_string(item[field.model]);
-            	}
+            	return field.to_string(item[field.model]);
             }
 
             // converts the date fields
@@ -359,10 +364,10 @@
 					}
 
 		            // converts the select fields
-		            if(field.type === 'select') {
+		            /*if(field.type === 'select') {
 		            	item['_'+field.model] = item[field.model];
 		            	item[field.model] = item[field.model]['@id'];
-		            }
+		            }*/
 				});
 
 				collection.push(item);
@@ -474,7 +479,7 @@
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
                 editorScope.options = mlResources.getOptions(name);
-                editorScope.item = (isAdding) ? mlResources.createResource(name) : item;
+                editorScope.item = (isAdding) ? mlResources.createResource(name) : angular.copy(item);
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({
@@ -499,9 +504,15 @@
 
         var dialogTemplate = "\
             <md-dialog>\
-                <md-button ng-click='cancel()' class='md-icon-button ml-close-button'>\
-                    <md-icon class='material-icons'>close</md-icon>\
-                </md-button>\
+                <md-toolbar>\
+                    <div class=\"md-toolbar-tools\">\
+                        <span>{{ title_list }}</span>\
+                        <span flex></span>\
+                        <md-button ng-click=\"cancel()\">\
+                            <md-icon class=\"material-icons\">close</md-icon>\
+                        </md-button>\
+                    </div>\
+                </md-toolbar>\
                 <md-dialog-content class='md-dialog-content'>"+listTemplate+"</md-dialog-content>\
             </md-dialog>";
 
@@ -535,10 +546,15 @@
 		var resources = this.resources = {};
 		var options = this.options = {};
 		var baseUrl;
+        var defaultHeaders = {};
 
 		this.setBaseUrl = function(url) {
 			baseUrl = url;
 		};
+
+        this.setDefaultHeaders = function(headers) {
+            defaultHeaders = headers;
+        };
 
 		this.addResource = function (opts) {
             var name = opts.name;
@@ -554,6 +570,7 @@
                 init: function () {
 
                 	Restangular.setBaseUrl(baseUrl);
+                    Restangular.setDefaultHeaders(defaultHeaders);
                 	Restangular.setRestangularFields({
                 		id: '@id'
                 	});
@@ -593,7 +610,7 @@
 			            return data;
 			        });
 
-                    Restangular.addRequestInterceptor(function(element, operation) {
+                    /*Restangular.addRequestInterceptor(function(element, operation) {
                         if('post' == operation) {
                             angular.forEach(element, function(val, key) {
                                 if(!angular.isDate(val) && angular.isObject(val)) {
@@ -602,7 +619,7 @@
                             });
                         }
                         return element;
-                    });
+                    });*/
 
                     angular.forEach(options, function (opts, name) {
                         resources[name] = Restangular.all(opts.uri);
@@ -648,15 +665,30 @@
 (function(angular) {
     "use strict";
 
+    /*
+    <div layout=\"row\">\
+        <ui-select ng-model=\"item[field.model]\" theme=\"select2\" style=\"width: 100%;\">\
+            <ui-select-match placeholder=\"{{ field.label }}\">{{ $select.selected.label }}</ui-select-match>\
+            <ui-select-choices repeat=\"option in getOptions(field)\" refresh=\"refreshOptions(field, $select.search)\" refresh-delay=\"0\">\
+                <div ng-bind-html=\"option.label | highlight: $select.search\"></div>\
+            </ui-select-choices>\
+        </ui-select>\
+        <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"26\"></md-progress-circular>\
+    </div>\
+    */
+
      var editorTemplate ="\
         <md-dialog>\
-            <md-button ng-click=\"cancel()\" class=\"md-icon-button ml-close-button\">\
-                <md-icon class=\"material-icons\">close</md-icon>\
-            </md-button>\
-            <md-dialog-content class=\"md-dialog-content\">\
-                <div class=\"ml-editor-title\">\
-                    {{ title }}\
+            <md-toolbar>\
+                <div class=\"md-toolbar-tools\">\
+                    <span>{{ title }}</span>\
+                    <span flex></span>\
+                    <md-button ng-click=\"cancel()\">\
+                        <md-icon class=\"material-icons\">close</md-icon>\
+                    </md-button>\
                 </div>\
+            </md-toolbar>\
+            <md-dialog-content class=\"md-dialog-content\">\
                 <form>\
                     <div ng-repeat=\"field in fields\">\
                         <md-input-container class=\"md-block\" ng-if=\"field.type|inInputTypes\">\
@@ -665,15 +697,9 @@
                         </md-input-container>\
                         <md-input-container class=\"md-block\" ng-if=\"field.type == 'select'\">\
                             <label style=\"margin: 5px 0;\">{{ field.label }}</label>\
-                            <div layout=\"row\">\
-                                <ui-select ng-model=\"item[field.model]\" theme=\"select2\" style=\"width: 100%;\">\
-                                    <ui-select-match placeholder=\"{{ field.label }}\">{{ $select.selected.label }}</ui-select-match>\
-                                    <ui-select-choices repeat=\"option in getOptions(field)\" refresh=\"refreshOptions(field, $select.search)\" refresh-delay=\"0\">\
-                                        <div ng-bind-html=\"option.label | highlight: $select.search\"></div>\
-                                    </ui-select-choices>\
-                                </ui-select>\
-                                <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"26\"></md-progress-circular>\
-                            </div>\
+                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" md-on-open=\"loadOptions(field)\">\
+                                <md-option ng-value=\"option.value\" ng-repeat=\"option in getOptions(field)\">{{ option.label }}</option>\
+                            </md-select>\
                         </md-input-container>\
                         <div ng-if=\"field.type == 'date'\">\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
@@ -706,9 +732,6 @@
         "<div class='ml-list'>\
             <table ml-list-selection>\
                 <caption>\
-                    <span class='ml-list-title'>\
-                        {{ title_list }}\
-                    </span>\
                     <div layout='row' layout-align='end center' class='ml-list-actions'>\
                         <md-button ng-click='add()' class='md-icon-button green'>\
                             <md-icon class='material-icons'>add</md-icon>\
