@@ -23,7 +23,7 @@
             options[name] = opts;
         };
 
-        this.$get = function ($window, Restangular) {
+        this.$get = function ($window, $filter, Restangular) {
 
             var service = {
                 /*
@@ -72,16 +72,16 @@
 			            return data;
 			        });
 
-                    /*Restangular.addRequestInterceptor(function(element, operation) {
-                        if('post' == operation) {
-                            angular.forEach(element, function(val, key) {
-                                if(!angular.isDate(val) && angular.isObject(val)) {
-                                    element[key] = val.value;
-                                };
-                            });
-                        }
+                    Restangular.addRequestInterceptor(function(element, operation) {
+                        angular.forEach(element, function(val, key) {
+
+                            // convert date in local format
+                            if(angular.isDate(val)) {
+                                element[key] = $filter('date')(val, 'shortDate');
+                            };
+                        });
                         return element;
-                    });*/
+                    });
 
                     angular.forEach(options, function (opts, name) {
                         resources[name] = Restangular.all(opts.uri);
