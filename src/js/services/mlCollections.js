@@ -49,10 +49,10 @@
 					}
 
 		            // converts the select fields
-		            if(field.type === 'select') {
+		            /*if(field.type === 'select') {
 		            	item['_'+field.model] = item[field.model];
 		            	item[field.model] = item[field.model]['@id'];
-		            }
+		            }*/
 				});
 
 				collection.push(item);

@@ -31,15 +31,25 @@
                 var params = angular.merge({}, field.select_resource.params);
                 params[field.select_resource.label] = search;
 
+                var itemSelected = $scope.item[field.model];
+
                 field.select_options = [];
                 field.loading = true;
                 mlResources.get(field.select_resource.resource).getList(params)
                     .then(function(response) {
                         angular.forEach(response, function(item) {
-                            field.select_options.push({
+                            var option = {
                                 label: item[field.select_resource.label],
                                 value: item['@id']
-                            });
+                            };
+
+                            field.select_options.push(option);
+
+                            if(angular.isDefined(itemSelected['@id'])) {
+                                if(itemSelected['@id'] === item['@id']) {
+                                    $scope.item[field.model] = option;
+                                }
+                            }
                         });
 
                     }, function(response) {

@@ -8,10 +8,15 @@
 		var resources = this.resources = {};
 		var options = this.options = {};
 		var baseUrl;
+        var defaultHeaders = {};
 
 		this.setBaseUrl = function(url) {
 			baseUrl = url;
 		};
+
+        this.setDefaultHeaders = function(headers) {
+            defaultHeaders = headers;
+        };
 
 		this.addResource = function (opts) {
             var name = opts.name;
@@ -27,6 +32,7 @@
                 init: function () {
 
                 	Restangular.setBaseUrl(baseUrl);
+                    Restangular.setDefaultHeaders(defaultHeaders);
                 	Restangular.setRestangularFields({
                 		id: '@id'
                 	});

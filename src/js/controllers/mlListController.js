@@ -87,11 +87,7 @@
 		$scope.getString = function(field, item) {
 
             if(angular.isFunction(field.to_string)) {
-            	if('select' == field.type) {
-            		return field.to_string(item['_'+field.model]);
-            	} else {
-            		return field.to_string(item[field.model]);
-            	}
+            	return field.to_string(item[field.model]);
             }
 
             // converts the date fields

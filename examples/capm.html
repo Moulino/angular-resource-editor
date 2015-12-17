@@ -66,9 +66,16 @@
 
 			app.config(function(mlResourcesProvider) {
 				mlResourcesProvider.setBaseUrl('http://fchapps-dev');
+				mlResourcesProvider.setDefaultHeaders({
+					Authorization: 'Basic QWRtaW46RmNoQ2FwJA=='
+				});
+				
 				mlResourcesProvider.addResource({
 					name: 'suppliers',
 					uri: 'capm/api/suppliers',
+					filters: {
+						'order[name]': 'ASC'
+					},
 					title_list: "Liste des fournisseurs",
 					title_add: "Ajout d'un fournisseur",
 					title_edit: "Edition d'un fournisseur",
@@ -85,6 +92,9 @@
 				mlResourcesProvider.addResource({
 					name: 'factories',
 					uri: 'capm/api/factories',
+					filters: {
+						'order[name]': 'ASC'
+					},
 					title_list: 'Installations',
 					title_add: "Ajout d'une installation",
 					title_edit: "Edition de l'installation",
@@ -102,6 +112,9 @@
 				mlResourcesProvider.addResource({
 					name: 'machines',
 					uri: 'capm/api/machines',
+					filters: {
+						'order[name]': 'ASC'
+					},
 					title_list: 'Machines',
 					title_add: "Ajout d'une machine",
 					title_edit: "Edition de la machine",
@@ -116,8 +129,8 @@
 						{
 							label: 'Installation',
 							model: 'factory',
-							to_string: function(item) {
-								return item.factory.name;
+							to_string: function(factory) {
+								return factory.name;
 							},
 							type: 'select',
 							select_resource: {
@@ -135,6 +148,9 @@
 				mlResourcesProvider.addResource({
 					name: 'invoicetypes',
 					uri: 'capm/api/invoicetypes',
+					filters: {
+						'order[name]': 'ASC'
+					},
 					title_list: "Types de factures",
 					title_add: "Ajout d'un type de facture",
 					title_edit: "Edition du type de facture",
@@ -153,90 +169,79 @@
 				mlResourcesProvider.addResource({
 					name: 'invoices',
 					uri: 'capm/api/invoices',
+					filters: {
+						'order[date]': 'DESC'
+					},
 					title_list: 'Factures',
 					title_add: "Ajout d'une facture",
 					title_edit: "Edition de la facture",
 					question_remove: "Voulez-vous supprimer cette facture ?",
-					fields: 
-						[
-							{
-								label: 'Fournisseur',
-								model: 'supplier',
-								to_string: function(item) {
-									return item.supplier.name;
-								},
-								type: 'select',
-								required: true,
-								select_resource: {
-									resource: 'suppliers',
-									label: 'name',
-									params: {
-										itemsPerPage: 1000000
-									}
-								}
+					fields: [
+						{
+							label: 'Fournisseur',
+							model: 'supplier',
+							to_string: function(supplier) {
+								return supplier.name;
 							},
-							{
-								label: 'Machine',
-								model: 'machine',
-								to_string: function(item) {
-									return item.machine.name;
-								},
-								type: 'select',
-								required: true,
-								select_resource: {
-									resource: 'machines',
-									label: 'name'
-								}
-							},
-							{
-								label: 'Installation',
-								model: 'factory',
-								to_string: function(item) {
-									return item.machine.factory.name;
-								},
-								type: 'select',
-								required: true,
-								select_resource: {
-									resource: 'factories',
-									label: 'name'
-								}
-							},
-							{
-								label: 'Montant',
-								model: 'amount',
-								type: 'number',
-								to_string: function(item) {
-									return item.amount + ' €';
-								},
-								required: true
-							},
-							{
-								label: 'Date',
-								model: 'date',
-								date_format: 'dd/MM/yyyy',
-								type: 'date',
-								required: true
-							},
-							{
-								label: 'Description',
-								model: 'description',
-								type: 'textarea',
-								required: true
-							},
-							{
-								label: 'Type',
-								model: 'invoicetype',
-								to_string: function(item) {
-									return item.invoicetype.type;
-								},
-								type: 'select',
-								required: true,
-								select_resource: {
-									resource: 'invoicetypes',
-									label: 'type'
+							type: 'select',
+							required: true,
+							select_resource: {
+								resource: 'suppliers',
+								label: 'name',
+								params: {
+									itemsPerPage: 1000000
 								}
 							}
-						]
+						},
+						{
+							label: 'Machine',
+							model: 'machine',
+							to_string: function(machine) {
+								return machine.name;
+							},
+							type: 'select',
+							required: true,
+							select_resource: {
+								resource: 'machines',
+								label: 'name'
+							}
+						},
+						{
+							label: 'Montant',
+							model: 'amount',
+							type: 'number',
+							to_string: function(amount) {
+								return amount + ' €';
+							},
+							required: true
+						},
+						{
+							label: 'Date',
+							model: 'date',
+							date_format: 'dd/MM/yyyy',
+							type: 'date',
+							required: true
+						},
+						{
+							label: 'Description',
+							model: 'description',
+							type: 'textarea',
+							required: true
+						},
+						{
+							label: 'Type',
+							model: 'invoicetype',
+							to_string: function(invoicetype) {
+								return invoicetype.type;
+							},
+							type: 'select',
+							required: true,
+							select_resource: {
+								resource: 'invoicetypes',
+								label: 'type'
+							}
+						}
+					]
 					});
 			});
 
