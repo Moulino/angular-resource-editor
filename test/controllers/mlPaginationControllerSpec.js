@@ -1,107 +1,104 @@
 describe('mlPaginationController', function() {
-	var $controller, $scope, mlCollections;
+	var $controller, $scope, mlCollection;
 
-	beforeEach(module('mlResourcesEditor'));
+	beforeEach(module('mlResourceEditor'));
 
-	beforeEach(inject(function(_$controller_, _mlCollections_) {
+	beforeEach(inject(function(_$controller_, _mlCollection_) {
 		$controller = _$controller_;
-		mlCollections = _mlCollections_;
+		mlCollection = _mlCollection_;
 
-		$scope = {};
-		$scope.load = jasmine.createSpy();
+		$scope = jasmine.createSpyObj('$scope', ['load']);
 
 		$controller('mlPaginationController', {$scope: $scope});
 	}));
 
+	it('should init the page number', function() {
+		expect($scope.page).toEqual(1);
+	});
+
 	describe('first', function() {
-		it('should load first page', function() {
-			$scope.page = 2;
+		it('should load the first page', function() {
+			$scope.page = 3;
 			$scope.first();
+			expect($scope.page).toEqual(1);
 			expect($scope.load).toHaveBeenCalledWith(1);
 		});
 	});
 
 	describe('next', function() {
-		it('should load next page', function() {
-			$scope.page = 3;
-
-			spyOn(mlCollections, 'getNumberOfPages').and.returnValue(4);
-
+		it('should load the next page', function() {
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(2);
+			$scope.page = 1;
 			$scope.next();
-			expect($scope.load).toHaveBeenCalledWith(4);
+			expect($scope.page).toEqual(2);
+			expect($scope.load).toHaveBeenCalledWith(2);
 		});
 
-		it('should not load page if it is greater or equal to number of pages', function() {
-			$scope.page = 3;
-
-			spyOn(mlCollections, 'getNumberOfPages').and.returnValue(3);
-
+		it('should do nothing if the current page is the last', function() {
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(2);
+			$scope.page = 2;
 			$scope.next();
-			expect($scope.load.calls.any()).toBe(false);
+			expect($scope.page).toEqual(2);
+			expect($scope.load).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('previous', function() {
-		it('should load previous page', function() {
-			$scope.page = 3;
-
+		it('should load the previous page', function() {
+			$scope.page = 2;
 			$scope.previous();
-			expect($scope.load).toHaveBeenCalledWith(2);
+			expect($scope.page).toEqual(1);
+			expect($scope.load).toHaveBeenCalledWith(1);
 		});
 
-		it('should not load page if it is less or equal to one', function() {
-			$scope.page = 1;
+		it('should do nothing if the current page is the first', function() {
 			$scope.previous();
-			expect($scope.load.calls.any()).toBe(false);
-
-			$scope.page = 0;
-			$scope.previous();
-			expect($scope.load.calls.any()).toBe(false);
-
-			$scope.page = -1;
-			$scope.previous();
-			expect($scope.load.calls.any()).toBe(false);
+			expect($scope.page).toEqual(1);
+			expect($scope.load).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('last', function() {
 		it('should load the last page', function() {
-			spyOn(mlCollections, 'getNumberOfPages').and.returnValue(4);
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(4);
+			$scope.page = 2;
 			$scope.last();
-
 			expect($scope.page).toEqual(4);
 			expect($scope.load).toHaveBeenCalledWith(4);
 		});
 	});
 
 	describe('isFirstPage', function() {
-		it('should return true', function() {
-			spyOn(mlCollections, 'isFirstPage').and.returnValue(true);
-			expect($scope.isFirstPage()).toBe(true);
-		});	
+		it('should return true if the current page is the first', function() {
+			$scope.page = 1;
+			expect($scope.isFirstPage()).toBeTrue();
+		});
 
-		it('should return false', function() {
-			spyOn(mlCollections, 'isFirstPage').and.returnValue(false);
-			expect($scope.isFirstPage()).toBe(false);
+		if('should return false if the current page is not the first', function() {
+			$scope.page = 2;
+			expect($scope.isFirstPage()).toBeFalse();
 		});
 	});
-	
-	describe('isLastPage', function() {
-		it('should return true', function() {
-			spyOn(mlCollections, 'isLastPage').and.returnValue(true);
-			expect($scope.isLastPage()).toBe(true);
-		});	
 
-		it('should return false', function() {
-			spyOn(mlCollections, 'isLastPage').and.returnValue(false);
-			expect($scope.isLastPage()).toBe(false);
+	describe('isLastPage', function() {
+		it('should return true if the current page is the last', function() {
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(4);
+			$scope.page = 4;
+			expect($scope.isLastPage()).toBeTrue();
+		});
+
+		if('should return false if the current page is not the last', function() {
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(4);
+			$scope.page = 2;
+			expect($scope.isLastPage()).toBeFalse();
 		});
 	});
 
 	describe('numberOfPages', function() {
 		it('should return the number of pages', function() {
-			spyOn(mlCollections, 'getNumberOfPages').and.returnValue(5);
-			expect($scope.numberOfPages()).toEqual(5);
-		});	
+			spyOn(mlCollection, 'getNumberOfPages').and.returnValue(4);
+			var result = $scope.numberOfPages();
+			expect(result).toEqual(4);
+		});
 	});
 });

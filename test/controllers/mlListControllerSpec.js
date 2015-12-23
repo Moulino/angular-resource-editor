@@ -1,465 +1,383 @@
 describe('mlListController', function() {
-    var $q, $rootScope, $controller, $window, mlCollections;
+    var $q,
+        $rootScope, 
+        controller, 
+        $window, 
+        $scope,
+        mlCollection;
 
-    beforeEach(module('mlResourcesEditor'));
+    beforeEach(module('mlResourceEditor'));
 
-    beforeEach(inject(function(_$q_, _$controller_, _$rootScope_, _$window_, _mlCollections_) {
+    beforeEach(inject(function(_$q_, _$controller_, _$rootScope_, _$window_, _mlCollection_) {
         $q = _$q_;
         $rootScope = _$rootScope_;
-        $controller = _$controller_;
         $window = _$window_;
-        mlCollections = _mlCollections_;
+        mlCollection = _mlCollection_;
+
+        $scope = {test: true};
+        controller = _$controller_('mlListController', {$scope: $scope});
     }));
+
+    it('should init variables', function() {
+        expect($scope.items).toBeEmptyArray();
+        expect($scope.rowSelected).toBeNull();
+        expect($scope.mode).toEqual('inline');
+    });
 
     describe('load', function() {
         var deferred;
 
-        beforeEach(inject(function() {
+        beforeEach(function() {
             deferred = $q.defer();
-            spyOn(mlCollections, 'load').and.returnValue(deferred.promise);
-        }));
 
-        it('should load collection', function() {
-            $scope = {name: 'tasks'};
-            $controller('mlListController', {$scope: $scope, test: true});
-
-            expect(mlCollections.load).toHaveBeenCalledWith('tasks', 1);
-
-            $scope.load(2);
-            expect(mlCollections.load).toHaveBeenCalledWith('tasks', 2);
+            spyOn(mlCollection, 'load').and.returnValue(deferred.promise);
+            $scope.name = 'tasks';
         });
 
-        it('should update loading', function() {
-            $scope = {name: 'tasks', test: true};
-            $controller('mlListController', {$scope: $scope});
-
+        it('should load the first page by default', function() {
             $scope.load();
-            expect($scope.loading).toBe(true);
+            expect(mlCollection.load).toHaveBeenCalledWith('tasks', 1);
+        });
 
-            deferred.resolve([]);
+        it('should load collection', function() {
+            $scope.load(2); // load second page
+            deferred.resolve();
             $rootScope.$apply();
-            expect($scope.loading).toBe(false);
+            expect(mlCollection.load).toHaveBeenCalledWith('tasks', 2);
+        });
+
+        it('should update loading flag', function() {
+            $scope.load();
+            expect($scope.loading).toBeTrue();
+            deferred.resolve();
+            $rootScope.$apply();
+            expect($scope.loading).toBeFalse();
         });
     });
 
     describe('reload', function() {
-        var $scope;
+        var deferred;
 
         beforeEach(function() {
-            $scope = {
-                name: 'tasks', 
-                load: function() {},
-                test: true
-            };
+            deferred = $q.defer();
 
-            var controller = $controller('mlListController', {
-                $scope: $scope,
-                mlCollections: mlCollections
-            });
+            spyOn(mlCollection, 'reload').and.returnValue(deferred.promise);
+            $scope.name = 'tasks';
         });
 
-        it('should reload collection', function() {
-            spyOn(mlCollections, 'reload').and.returnValue($q.defer().promise);
+        it('should reload the collection', function() {
             $scope.reload();
-            expect(mlCollections.reload).toHaveBeenCalledWith('tasks');
-        });
-
-        it('should update loading', function() {
-            var deferred = $q.defer();
-            spyOn(mlCollections, 'reload').and.returnValue(deferred.promise);
-            $scope.reload();
-            expect($scope.loading).toEqual(true);
-
-            deferred.resolve([]);
+            deferred.resolve();
             $rootScope.$apply();
-            expect($scope.loading).toEqual(false);
+            expect(mlCollection.reload).toHaveBeenCalledWith('tasks');
+        });
+
+        it('should update loading flag', function() {
+            $scope.reload();
+            expect($scope.loading).toBeTrue();
+            deferred.resolve();
+            $rootScope.$apply();
+            expect($scope.loading).toBeFalse();
         });
     });
 
     describe('itemSelected', function() {
-        var $scope;
-
-        beforeEach(function() {
-            $scope = {
-                name: 'tasks', 
-                load: function() {},
-                test: true
-            };
-
-            var controller = $controller('mlListController', {
-                $scope: $scope
-            });
-        });
-
-        it('should return null value if no row selected', function() {
-            $scope.rowSelected = null;
-
-            var item = $scope.itemSelected();
-            expect(item).toBeNull();
-        });
-
-        it('should return item', function() {
+        it('should return an item', function() {
             $scope.items = [{id: 1}, {id: 2}];
             $scope.rowSelected = 1;
 
-            var item = $scope.itemSelected();
-            expect(item).toEqual({id: 2});
+            expect($scope.itemSelected()).toEqual({id: 2});
+        });
+
+        it('should return null if any row is selected', function() {
+            $scope.rowSelected = null;
+            expect($scope.itemSelected()).toBeNull();
         });
     });
 
     describe('add', function() {
-        var mlEditorDialog, mlListDialog, $scope;
+        var mlEditorDialog, 
+            dialogDeferred,
+            postDeferred,
+            collection;
 
-        beforeEach(inject(function(_mlEditorDialog_, _mlListDialog_) {
+        beforeEach(inject(function(_mlEditorDialog_) {
             mlEditorDialog = _mlEditorDialog_;
-            mlListDialog = _mlListDialog_;
 
-            $scope = {
-                name: 'tasks', 
-                load: function() {},
-                test: true
+            dialogDeferred = $q.defer();
+            postDeferred = $q.defer();
+
+            collection = {
+                post: function() { return postDeferred.promise; }
             };
 
-            var controller = $controller('mlListController', {
-                $scope: $scope,
-                mlCollections: mlCollections
-            });
+            $scope.name = 'tasks';
+
+            spyOn(mlEditorDialog, 'open').and.returnValue(dialogDeferred.promise);
+            spyOn(mlCollection, 'getResource').and.returnValue(collection);
+            spyOn(collection, 'post').and.callThrough();
+            spyOn($scope, 'reload');
         }));
 
-        it('should open the editor dialog', function() {
-            spyOn(mlEditorDialog, 'open').and.returnValue($q.defer().promise);
+        it('should post the new item if the dialog succeeded', function() {
+            var item = {id: 1, name: 'task1'};
             $scope.add();
-            expect(mlEditorDialog.open).toHaveBeenCalledWith('tasks');
-        });
 
-        it('shoud save the item if editor dialog succeeded', function() {
-            var deferred = $q.defer();
-            var collection = {post: function() {}};
-
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferred.promise);
-            spyOn(mlCollections, 'getCollection').and.returnValue(collection);
-            spyOn(collection, 'post').and.returnValue({then: function() {}, finally: function(){}});
-
-            $scope.add();
-            deferred.resolve({id: 1});
+            dialogDeferred.resolve(item);
             $rootScope.$apply();
 
-            expect(mlCollections.getCollection).toHaveBeenCalledWith('tasks');
-            expect(collection.post).toHaveBeenCalledWith({id: 1});
+            expect(mlCollection.getResource).toHaveBeenCalledWith('tasks');
+            expect(collection.post).toHaveBeenCalledWith(item);
         });
 
-        it('shoud reload collection if item save is succeeded', function() {
-            var deferredDialog = $q.defer();
-            var deferredPost = $q.defer();
-            var collection = {post: function() {}};
-
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(mlCollections, 'getCollection').and.returnValue(collection);
-            spyOn(collection, 'post').and.returnValue(deferredPost.promise);
-            spyOn($scope, 'reload');
-
+        it('should do nothing if the dialog failed', function() {
             $scope.add();
 
-            deferredDialog.resolve();
-            deferredPost.resolve();
+            dialogDeferred.reject();
+            $rootScope.$apply();
+
+            expect(mlCollection.getResource).not.toHaveBeenCalled();
+        });
+
+        it('should reload collection if the the item is added', function() {
+            $scope.add();
+
+            dialogDeferred.resolve({});
+            postDeferred.resolve();
             $rootScope.$apply();
 
             expect($scope.reload).toHaveBeenCalled();
         });
 
-        it('shoud open list dialog if mode is dialog', function() {
-            var deferredDialog = $q.defer();
-            var deferredPost = $q.defer();
-            var collection = {post: function() {}};
-
+        it('should open list dialog after adding if dialog', inject(function(mlListDialog) {
+            spyOn(mlListDialog, 'open');
             $scope.mode = 'dialog';
 
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(mlCollections, 'getCollection').and.returnValue(collection);
-            spyOn(collection, 'post').and.returnValue(deferredPost.promise);
-            spyOn(mlListDialog, 'open');
-            spyOn($scope, 'reload');
-
             $scope.add();
 
-            deferredDialog.resolve();
-            deferredPost.resolve();
+            dialogDeferred.resolve();
+            postDeferred.resolve();
             $rootScope.$apply();
-            mlListDialog.open('tasks');
 
             expect(mlListDialog.open).toHaveBeenCalledWith('tasks');
-        });
+        }));
 
-        it('shoud not open list dialog if mode is inline', function() {
-            var deferredDialog = $q.defer();
-            var deferredPost = $q.defer();
-            var collection = {post: function() {}};
-
-            $scope.mode = 'inline';
-
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(mlCollections, 'getCollection').and.returnValue(collection);
-            spyOn(collection, 'post').and.returnValue(deferredPost.promise);
+        it('should not open the list dialog if inline', inject(function(mlListDialog) {
             spyOn(mlListDialog, 'open');
-            spyOn($scope, 'reload');
 
             $scope.add();
-            deferredDialog.resolve();
-            deferredPost.resolve();
+
+            dialogDeferred.resolve();
+            postDeferred.resolve();
             $rootScope.$apply();
 
-            expect(mlListDialog.open.calls.any()).toBe(false);
-        });
+            expect(mlListDialog.open).not.toHaveBeenCalled();
+        }));
 
-        it('should display error and re-open the editor box if post failed', function() {
-            var deferredDialog = $q.defer();
-            var deferredPost = $q.defer();
-            var collection = {post: function() {}};
-
-            $scope.mode = 'inline';
-
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(mlCollections, 'getCollection').and.returnValue(collection);
-            spyOn(collection, 'post').and.returnValue(deferredPost.promise);
+        it('should display error and re-open add dialog if post failed', inject(function($window) {
             spyOn($window, 'alert');
 
             $scope.add();
+
+            dialogDeferred.resolve();
+            postDeferred.reject({
+                'hydra:description': 'test error'
+            });
             spyOn($scope, 'add');
-            deferredDialog.resolve({id: 1});
-            deferredPost.reject({'hydra:description': 'test error'});
             $rootScope.$apply();
+
 
             expect($window.alert).toHaveBeenCalledWith('test error');
             expect($scope.add).toHaveBeenCalled();
-        });
+        }));
     });
 
     describe('edit', function() {
-        var mlEditorDialog, mlListDialog, $scope;
+        var mlEditorDialog, 
+            dialogDeferred,
+            saveDeferred,
+            itemUpd;
 
-        beforeEach(inject(function(_mlEditorDialog_, _mlListDialog_) {
+        beforeEach(inject(function(_mlEditorDialog_) {
             mlEditorDialog = _mlEditorDialog_;
-            mlListDialog = _mlListDialog_;
 
-            $scope = {name: 'tasks', test: true};
+            dialogDeferred = $q.defer();
+            saveDeferred = $q.defer();
 
-            var controller = $controller('mlListController', {
-                $scope: $scope
-            });
+            itemUpd = {
+                save: function() { return saveDeferred.promise; }
+            };
+
+            $scope.name = 'tasks';
+
+            spyOn(mlEditorDialog, 'open').and.returnValue(dialogDeferred.promise);
+            spyOn(itemUpd, 'save').and.callThrough();
+            spyOn($scope, 'itemSelected').and.returnValue({id: 1});
+            spyOn($scope, 'reload');
         }));
 
-        it('should open the editor dialog if an item is selected', function() {
-            $scope.itemSelected = function() {};
-
-            spyOn(mlEditorDialog, 'open').and.returnValue($q.defer().promise);
-            spyOn($scope, 'itemSelected').and.returnValue({id: 1});
-
+        it('should save the item if the dialog succeeded', function() {
             $scope.edit();
-            expect(mlEditorDialog.open).toHaveBeenCalledWith('tasks', {id: 1});
-        });
 
-        it('should do nothing if no item is selected', function() {
-            $scope.itemSelected = function() {};
-
-            spyOn(mlEditorDialog, 'open');
-            spyOn($scope, 'itemSelected').and.returnValue(null);
-
-            $scope.edit();
-            expect(mlEditorDialog.open.calls.any()).toBe(false);
-        });
-
-        it('shoud save the item if editor dialog succeeded', function() {
-            var deferred = $q.defer();
-            var item = {
-                id: 1,
-                save: function() {
-                    return $q.defer().promise;
-                }
-            };
-
-            spyOn($scope, 'itemSelected').and.returnValue(item);
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferred.promise);
-            spyOn(item, 'save').and.callThrough();
-            
-            $scope.edit();
-            deferred.resolve(item);
+            dialogDeferred.resolve(itemUpd);
             $rootScope.$apply();
 
-            expect(mlEditorDialog.open).toHaveBeenCalledWith('tasks', item);
-            expect(item.save).toHaveBeenCalled();
+            expect(mlEditorDialog.open).toHaveBeenCalledWith('tasks', {id: 1});
+            expect(itemUpd.save).toHaveBeenCalled();
         });
 
-        it('shoud reload collection if item save is succeeded', function() {
-            var deferredDialog = $q.defer();
-            var deferredSave = $q.defer();
-
-            var item = {
-                id: 1,
-                save: function() {}
-            };
-
-            spyOn($scope, 'itemSelected').and.returnValue(item);
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(item, 'save').and.returnValue(deferredSave.promise);
-            spyOn($scope, 'reload');
-            
+        it('should do nothing if the dialog failed', function() {
             $scope.edit();
-            deferredDialog.resolve(item);
-            deferredSave.resolve();
+
+            dialogDeferred.reject();
+            $rootScope.$apply();
+
+            expect(itemUpd.save).not.toHaveBeenCalled();
+        });
+
+        it('should reload collection if the the item is saved', function() {
+            $scope.edit();
+
+            dialogDeferred.resolve(itemUpd);
+            saveDeferred.resolve();
             $rootScope.$apply();
 
             expect($scope.reload).toHaveBeenCalled();
         });
 
-        it('should display error and re-open the editor box if post failed', function() {
-            var deferredDialog = $q.defer();
-            var deferredSave = $q.defer();
+        it('should open list dialog after adding if dialog', inject(function(mlListDialog) {
+            spyOn(mlListDialog, 'open');
+            $scope.mode = 'dialog';
 
-            var item = {
-                id: 1,
-                save: function() {}
-            };
-
-            spyOn($scope, 'itemSelected').and.returnValue(item);
-            spyOn(mlEditorDialog, 'open').and.returnValue(deferredDialog.promise);
-            spyOn(item, 'save').and.returnValue(deferredSave.promise);
-            spyOn($window, 'alert');
-            
             $scope.edit();
-            spyOn($scope, 'edit');
 
-            deferredDialog.resolve(item);
-            deferredSave.reject({'hydra:description': 'test error'});
+            dialogDeferred.resolve(itemUpd);
+            saveDeferred.resolve();
             $rootScope.$apply();
+
+            expect(mlListDialog.open).toHaveBeenCalledWith('tasks');
+        }));
+
+        it('should not open the list dialog if inline', inject(function(mlListDialog) {
+            spyOn(mlListDialog, 'open');
+
+            $scope.edit();
+
+            dialogDeferred.resolve(itemUpd);
+            saveDeferred.resolve();
+            $rootScope.$apply();
+
+            expect(mlListDialog.open).not.toHaveBeenCalled();
+        }));
+
+        it('should display error and re-open add dialog if post failed', inject(function($window) {
+            spyOn($window, 'alert');
+
+            $scope.edit();
+
+            dialogDeferred.resolve(itemUpd);
+            saveDeferred.reject({
+                'hydra:description': 'test error'
+            });
+            spyOn($scope, 'edit');
+            $rootScope.$apply();
+
 
             expect($window.alert).toHaveBeenCalledWith('test error');
             expect($scope.edit).toHaveBeenCalled();
-        });
+        }));
     });
 
     describe('remove', function() {
-        var $scope;
+        var $window,
+            removeDeferred, 
+            item;
 
-        beforeEach(inject(function() {
-            $scope = {
-                name: 'tasks', 
-                load: function() {},
-                test: true
+        beforeEach(inject(function(_$window_) {
+            $window = _$window_;
+
+            removeDeferred = $q.defer();
+
+            item = {
+                remove: function() { return removeDeferred.promise; }
             };
 
-            var controller = $controller('mlListController', {
-                $scope: $scope
-            });
+            $scope.question_remove = 'test question';
+            spyOn($window, 'confirm').and.returnValue(true);
+            spyOn($scope, 'itemSelected').and.returnValue(item);
+            spyOn(item, 'remove').and.callThrough();
         }));
 
-        it('should request confirmation before deleting the item', function() {
-            $scope.question_remove = 'remove ?';
-
-            spyOn($scope, 'itemSelected').and.returnValue(null);
-            spyOn($window, 'confirm');
-
+        it('should ask confirmation', function() {
             $scope.remove();
-            expect($window.confirm).toHaveBeenCalledWith('remove ?');
+            expect($window.confirm).toHaveBeenCalledWith('test question');
         });
 
-        it('should remove the item and reload collection if it is not null', function() {
-            $scope.question_remove = '';
-
-            var item = {
-                id: 1,
-                remove: function() {}
-            };
-
-            var deferred = $q.defer();
-
-            spyOn($scope, 'itemSelected').and.returnValue(item);
-            spyOn($window, 'confirm').and.returnValue(true);
-            spyOn(item, 'remove').and.returnValue(deferred.promise);
-            spyOn($scope, 'reload');
-
+        it('should remove the item', function() {
             $scope.remove();
-            deferred.resolve();
-            $rootScope.$apply();
-
             expect(item.remove).toHaveBeenCalled();
+        });
+
+        it('should reload the collection if the removal succeeded', function() {
+            spyOn($scope, 'reload');
+            $scope.remove();
+            removeDeferred.resolve();
+            $rootScope.$apply();
             expect($scope.reload).toHaveBeenCalled();
         });
 
-        it('should display error if remove failed', function() {
-            $scope.question_remove = '';
-
-            var item = {
-                id: 1,
-                remove: function() {}
-            };
-
-            var deferred = $q.defer();
-
-            spyOn($scope, 'itemSelected').and.returnValue(item);
-            spyOn($window, 'confirm').and.returnValue(true);
+        it('should display alert if the removal failed', function() {
             spyOn($window, 'alert');
-            spyOn(item, 'remove').and.returnValue(deferred.promise);
-
             $scope.remove();
-            deferred.reject({'hydra:description': 'test error'});
+            removeDeferred.reject({
+                'hydra:description': 'test error'
+            });
             $rootScope.$apply();
-
             expect($window.alert).toHaveBeenCalledWith('test error');
         });
     });
 
     describe('getString', function() {
-        var $scope, $filter;
 
-        beforeEach(inject(function(_$filter_) {
-            $filter = _$filter_;
-            $scope = {
-                name: 'tasks', 
-                load: function() {},
-                test: true
-            };
-
-            var controller = $controller('mlListController', {
-                $scope: $scope
-            });
-        }));
-
-        it('should apply user function if it is defined', function() {
+        it('should call the field converter if it exists', function() {
             var field = {
-                to_string: function() {}
+                model: 'test',
+                to_string: jasmine.createSpy('to_string')
             };
-            var item = {id: 1};
 
-            spyOn(field, 'to_string');
+            var item = {test: 'test'};
 
             $scope.getString(field, item);
-            expect(field.to_string).toHaveBeenCalledWith(item);
+
+            expect(field.to_string).toHaveBeenCalledWith('test');
         });
 
-        it('should apply date filter for datetime', function() {
+        it('should convert date', function() {
             var field = {
+                model: 'test',
                 type: 'date',
-                date_format: 'dd-MM-yyyy"'
+                date_format: 'dd-MM-yyyy'
+            };
+            var item = {
+                test: new Date(2015, 01, 05)
             };
 
-            $filter = jasmine.createSpy().and.callFake(function() {return function() {}});
-
-            $controller('mlListController', {$scope: $scope, $filter: $filter});
-
-            $scope.getString(field, {});
-            expect($filter).toHaveBeenCalledWith('date');
+            var result = $scope.getString(field, item);
+            expect(result).toEqual('05-02-2015');            
         });
 
-        it('should return item value', function() {
+        it('else should return the item field', function() {
             var field = {
-                type: 'text',
-                model: 'foo'
+                model: 'test',
+                to_string: 'test_to_string'
             };
 
-            var item = {foo: 'bar'};
+            var item = {
+                test: 'test'
+            };
 
-            var text = $scope.getString(field, item);
-            expect(text).toEqual('bar');
+            var result = $scope.getString(field, item);
+            expect(result).toEqual('test');
         });
     });
 });

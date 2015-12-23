@@ -3,7 +3,7 @@ describe('mlListSelection directive', function() {
         $rootScope,
         element;
 
-    beforeEach(module('mlResourcesEditor'));
+    beforeEach(module('mlResourceEditor'));
 
     beforeEach(inject(function(_$compile_, _$rootScope_) {
         $compile = _$compile_;
@@ -11,10 +11,10 @@ describe('mlListSelection directive', function() {
 
         var template =
             '<div ml-list-selection >'+
-            '<table><tbody>'+
-            '<tr><td>1</td></tr>'+
-            '<tr><td>2</td></tr>'+
-            '</tbody></table>'+
+                '<table><tbody>'+
+                    '<tr><td>1</td></tr>'+
+                    '<tr><td>2</td></tr>'+
+                '</tbody></table>'+
             '</div>';
 
         $rootScope.rowSelected = null;
