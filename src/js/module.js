@@ -2,6 +2,6 @@
 
 	"use strict";
 
-	angular.module('mlResourcesEditor', ['restangular', 'ngMaterial', 'ui.select', 'ngSanitize']);
+	angular.module('mlResourceEditor', ['restangular', 'ngMaterial']);
 
 }(angular));

@@ -1,7 +1,7 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.factory('mlListDialog', function($rootScope, $mdDialog, $templateCache) {
 

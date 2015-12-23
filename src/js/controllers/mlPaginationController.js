@@ -1,9 +1,9 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlPaginationController', function($scope, mlCollections) {
+	module.controller('mlPaginationController', function($scope, mlCollection) {
 		$scope.page = 1;
 
 		$scope.first = function() {
@@ -12,7 +12,7 @@
 		};
 
 		$scope.next = function() {
-			if($scope.page < mlCollections.getNumberOfPages($scope.name)) {
+			if($scope.page < mlCollection.getNumberOfPages($scope.name)) {
 				$scope.load(++$scope.page);
 			}
 		};
@@ -24,20 +24,20 @@
 		};
 
 		$scope.last = function() {
-			$scope.page = mlCollections.getNumberOfPages($scope.name);
+			$scope.page = mlCollection.getNumberOfPages($scope.name);
 			$scope.load($scope.page);
 		};
 
 		$scope.isFirstPage = function() {
-			return mlCollections.isFirstPage($scope.name);
+			return mlCollection.isFirstPage($scope.name);
 		};
 
 		$scope.isLastPage = function() {
-			return mlCollections.isLastPage($scope.name);
+			return mlCollection.isLastPage($scope.name);
 		};
 
 		$scope.numberOfPages = function() {
-			return mlCollections.getNumberOfPages($scope.name);
+			return mlCollection.getNumberOfPages($scope.name);
 		};
 	});
 	

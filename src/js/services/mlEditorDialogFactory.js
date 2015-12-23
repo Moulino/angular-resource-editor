@@ -1,9 +1,9 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
-    module.factory('mlEditorDialog', function($rootScope, $mdDialog, $templateCache, mlResources) {
+    module.factory('mlEditorDialog', function($rootScope, $mdDialog, $templateCache, mlResource) {
 
         var template = $templateCache.get('mlEditorTemplate.html');
 
@@ -11,12 +11,12 @@
             open: function(name, item) {
 
                 var isAdding = angular.isUndefined(item);
-                var options = mlResources.getOptions(name);
+                var options = mlResource.getOptions(name);
 
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
-                editorScope.options = mlResources.getOptions(name);
-                editorScope.item = (isAdding) ? mlResources.createResource(name) : item;
+                editorScope.options = mlResource.getOptions(name);
+                editorScope.item = (isAdding) ? mlResource.createResource(name) : item;
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({

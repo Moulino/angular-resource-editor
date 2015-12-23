@@ -2,9 +2,9 @@
 
 	"use strict";
 	
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.provider('mlResources', function() {
+	module.provider('mlResource', function() {
 		var resources = this.resources = {};
 		var options = this.options = {};
 		var baseUrl;

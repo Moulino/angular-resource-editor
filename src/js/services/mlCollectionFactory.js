@@ -1,36 +1,33 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.factory('mlCollections', function($q, mlResources) {
+	module.factory('mlCollection', function($q, mlResource) {
 		var self = this;
 
-		this.lists = {};
+		this.collections = {};
 
 		var factory = {
+
 			load: function(name, page) {
-				var filters = mlResources.getOptions(name).filters || {},
-					collection = self.lists[name],
+				var filters = mlResource.getOptions(name).filters || {},
+					collection = factory.get(name),
 					deferred = $q.defer();
 
 				if(angular.isDefined(page)) {
 					filters.page = page;
 				}
 
-				if(angular.isUndefined(collection)) {
-					collection = self.lists[name] = [];
-				}
-
-				factory.getCollection(name).getList(filters).then(function(items) {
-					factory.clearCollection(name);
+				factory.getResource(name).getList(filters).then(function(items) {
+					factory.clear(name);
 					collection.metadata = items.metadata;
 					angular.forEach(items, function(item) {
 						factory.addToCollection(name, item);
 					});
 					deferred.resolve(collection);
 				}, function(error) {
-					collection.length = 0;
+					factory.clear(name);
 					deferred.reject(error)
 				});
 
@@ -38,8 +35,8 @@
 			},
 
 			addToCollection: function(name, item) {
-				var collection = self.lists[name];
-				var fields = mlResources.getOptions(name).fields || [];
+				var collection = factory.get(name);
+				var fields = mlResource.getOptions(name).fields || [];
 
 				angular.forEach(fields, function(field) {
 
@@ -47,20 +44,21 @@
 					if('date' == field.type) {
 						item[field.model] = new Date(item[field.model]);
 					}
-
-		            // converts the select fields
-		            /*if(field.type === 'select') {
-		            	item['_'+field.model] = item[field.model];
-		            	item[field.model] = item[field.model]['@id'];
-		            }*/
 				});
 
 				collection.push(item);
 			},
 
-			clearCollection: function(name) {
-				var collection = self.lists[name];
-				collection.length = 0;
+			create: function(name) {
+				self.collections[name] = self.collections[name] || []
+			},
+
+			exist: function(name) {
+				return angular.isDefined(self.collections[name]);
+			},
+
+			clear: function(name) {
+				self.collections[name].length = 0;
 			},
 
 			reload: function(name) {
@@ -70,7 +68,7 @@
 
 			getMetadata: function(name, key) {
 				var value,
-					collection = self.lists[name] || [];
+					collection = factory.get(name);
 
 				if(angular.isDefined(collection.metadata)) {
 					value = collection.metadata[key];
@@ -79,28 +77,26 @@
 				return value;
 			},
 
-			getCollection: function(name) {
-				return mlResources.get(name);
+			getResource: function(name) {
+				return mlResource.get(name);
 			},
 
-			getList: function(name) {
-				if(angular.isUndefined(self.lists[name])) {
-					self.lists[name] = [];
+			get: function(name) {
+				if(angular.isUndefined(self.collections[name])) {
+					factory.create(name);
 				}
-				return self.lists[name];
+				return self.collections[name];
 			},
 
 			getPage: function(name) {
 				var regex = /page=(\d+)/i;
 				var href = factory.getMetadata(name, 'href');
-				var page = 0;
+				var page = 1;
 
 				if(angular.isDefined(href)) {
-					page = 1;
-
 					var results = href.match(regex);
 					if(angular.isArray(results)) {
-						page = results[1];
+						page = parseInt(results[1]);
 					};
 				};
 
@@ -111,6 +107,10 @@
 				var totalItems = factory.getTotalItems(name);
 				var itemsPerPage = factory.getItemsPerPage(name);
 
+				if(0 == itemsPerPage) {
+					return 0;
+				}
+
 				if(
 					angular.isUndefined(totalItems) ||
 					angular.isUndefined(itemsPerPage)
@@ -119,7 +119,7 @@
 				}
 
 				var pages = totalItems / itemsPerPage;
-				var truncated = Math.trunc(pages);
+				var truncated = parseInt(pages, 10);
 
 				return ((pages - truncated) < 0.00001) 
 					? truncated : truncated +1;

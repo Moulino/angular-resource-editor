@@ -1,7 +1,7 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
 	module.directive('mlPagination', function() {
 		return {
@@ -15,7 +15,7 @@
 					<md-button ng-click='previous()' ng-disabled='isFirstPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_left</md-icon>\
 					</md-button>\
-					<span>{{ page }} - {{ numberOfPages() }}</span>\
+					<span class='pagination-pages'>{{ page }} - {{ numberOfPages() }}</span>\
 					<md-button ng-click='next()' ng-disabled='isLastPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_right</md-icon>\
 					</md-button>\

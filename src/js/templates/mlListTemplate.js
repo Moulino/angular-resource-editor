@@ -38,7 +38,7 @@
             <div ml-pagination></div>\
         </div>";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.run(function($templateCache) {
         $templateCache.put('mlListTemplate.html', template);

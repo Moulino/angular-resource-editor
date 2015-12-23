@@ -1,18 +1,6 @@
 (function(angular) {
     "use strict";
 
-    /*
-    <div layout=\"row\">\
-        <ui-select ng-model=\"item[field.model]\" theme=\"select2\" style=\"width: 100%;\">\
-            <ui-select-match placeholder=\"{{ field.label }}\">{{ $select.selected.label }}</ui-select-match>\
-            <ui-select-choices repeat=\"option in getOptions(field)\" refresh=\"refreshOptions(field, $select.search)\" refresh-delay=\"0\">\
-                <div ng-bind-html=\"option.label | highlight: $select.search\"></div>\
-            </ui-select-choices>\
-        </ui-select>\
-        <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"26\"></md-progress-circular>\
-    </div>\
-    */
-
      var editorTemplate ="\
         <md-dialog>\
             <md-toolbar>\
@@ -53,7 +41,7 @@
             </md-dialog-content>\
         </md-dialog>";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.run(function($templateCache) {
         $templateCache.put('mlEditorTemplate.html', editorTemplate);

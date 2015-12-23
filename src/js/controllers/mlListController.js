@@ -1,16 +1,16 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollections, mlResources, mlEditorDialog, mlListDialog) {
+	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
 		$scope.mode = $scope.mode || 'inline';
 		$scope.test = $scope.test || false; // for tests only
 		
-		angular.merge($scope, mlResources.getOptions($scope.name));
+		angular.merge($scope, mlResource.getOptions($scope.name));
 
 		var isDialog = function() {
 			return $scope.mode === 'dialog';
@@ -20,15 +20,18 @@
 			page = page || 1;
 
 			$scope.loading = true;
-			$scope.items = mlCollections.getList($scope.name);
-			mlCollections.load($scope.name, page).finally(function() {
+			$scope.items = mlCollection.get($scope.name);
+			mlCollection.load($scope.name, page).finally(function() {
 				$scope.loading = false;
 			});
 		};
 
+		/*
+		 * Reload the collection at the same page
+		 */
 		$scope.reload = function() {
 			$scope.loading = true;
-			mlCollections.reload($scope.name).finally(function() {
+			mlCollection.reload($scope.name).finally(function() {
 				$scope.loading = false;
 			});
 		};
@@ -39,7 +42,7 @@
 
 		$scope.add = function() {
 			mlEditorDialog.open($scope.name).then(function(item) {
-				mlCollections.getCollection($scope.name).post(item).then(function() {
+				mlCollection.getResource($scope.name).post(item).then(function() {
 					$scope.reload();
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -71,9 +74,8 @@
 		};
 
 		$scope.remove = function() {
-			var item = $scope.itemSelected();
-
-			if($window.confirm($scope.question_remove)) {			
+			if($window.confirm($scope.question_remove)) {
+				var item = $scope.itemSelected();		
 				if(null != item) {
 					item.remove().then(function() {
 						$scope.reload();
