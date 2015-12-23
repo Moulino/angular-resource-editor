@@ -34,7 +34,10 @@ module.exports = function(config) {
         'src/js/services/**/*.js',
         'src/js/templates/**/*.js',
         'test/controllers/**/*.js',
-        'test/directives/**/*.js'
+        'test/directives/**/*.js',
+        'test/filters/**/*.js',
+        'test/services/**/*.js',
+        'test/templates/**/*.js'
     ],
 
     // list of files to exclude
@@ -66,10 +69,16 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS', 'Chrome'],
+    browsers: ['PhantomJS', 'Firefox', 'Chrome', 'IE9'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: false,
+    customLaunchers: {
+        IE9: {
+            base: 'IE',
+            'x-ua-compatible': 'IE=EmulateIE9'
+        }
+    }
   })
 }
