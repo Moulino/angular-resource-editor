@@ -2,17 +2,20 @@
 
 	"use strict";
 
-	angular.module('mlResourcesEditor', ['restangular', 'ngMaterial', 'ui.select', 'ngSanitize']);
+	angular.module('mlResourceEditor', ['restangular', 'ngMaterial']);
 
 }(angular));
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
-    module.controller('mlEditorController', function($scope, $window, $mdDialog, mlCollections, mlResources) {
+    var isDefined = angular.isDefined,
+        isObject = angular.isObject;
 
-        $scope.fields = mlResources.getOptions($scope.name).fields;
+    module.controller('mlEditorController', function($scope, $window, $mdDialog, mlCollection, mlResource) {
+
+        $scope.fields = mlResource.getOptions($scope.name).fields;
 
         $scope.ok = function() {
             $mdDialog.hide($scope.item);
@@ -22,6 +25,12 @@
             $mdDialog.cancel();
         };
 
+
+        /*
+         * Returns the list of options if they are defined
+         * @param field <Object> Field option for the item selected
+         * @return <array> Options for select widget
+         */
         $scope.getOptions = function (field) {
             if(angular.isUndefined(field.select_options)) {
                 field.select_options = [];
@@ -30,18 +39,22 @@
             return field.select_options;
         };
 
+        /*
+         * Load the options for select widget from resource configured
+         * @param field <Object> Field option for the item selected
+         */
         $scope.loadOptions = function(field) {
-            if( angular.isDefined(field.select_resource) &&
-                angular.isDefined(field.select_resource.resource) &&
-                angular.isDefined(field.select_resource.label)) 
+            if( isDefined(field.select_resource) &&
+                isDefined(field.select_resource.resource) &&
+                isDefined(field.select_resource.label)) 
             {
-                var params = angular.merge({}, field.select_resource.params);
+                var params = field.select_resource.params || {};
 
                 var itemSelected = $scope.item[field.model];
 
                 field.select_options = [];
                 field.loading = true;
-                mlResources.get(field.select_resource.resource).getList(params)
+                mlResource.get(field.select_resource.resource).getList(params)
                     .then(function(response) {
                         angular.forEach(response, function(item) {
                             var option = {
@@ -51,7 +64,7 @@
 
                             field.select_options.push(option);
 
-                            if(null !== itemSelected && angular.isDefined(itemSelected['@id'])) {
+                            if(isObject(itemSelected) && itemSelected.hasOwnProperty('@id')) {
                                 if(itemSelected['@id'] === item['@id']) {
                                     $scope.item[field.model] = item['@id'];
                                 }
@@ -71,16 +84,16 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollections, mlResources, mlEditorDialog, mlListDialog) {
+	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog, Restangular) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
 		$scope.mode = $scope.mode || 'inline';
 		$scope.test = $scope.test || false; // for tests only
 		
-		angular.merge($scope, mlResources.getOptions($scope.name));
+		angular.merge($scope, mlResource.getOptions($scope.name));
 
 		var isDialog = function() {
 			return $scope.mode === 'dialog';
@@ -90,15 +103,18 @@
 			page = page || 1;
 
 			$scope.loading = true;
-			$scope.items = mlCollections.getList($scope.name);
-			mlCollections.load($scope.name, page).finally(function() {
+			$scope.items = mlCollection.get($scope.name);
+			mlCollection.load($scope.name, page).finally(function() {
 				$scope.loading = false;
 			});
 		};
 
+		/*
+		 * Reload the collection at the same page
+		 */
 		$scope.reload = function() {
 			$scope.loading = true;
-			mlCollections.reload($scope.name).finally(function() {
+			mlCollection.reload($scope.name).finally(function() {
 				$scope.loading = false;
 			});
 		};
@@ -109,7 +125,7 @@
 
 		$scope.add = function() {
 			mlEditorDialog.open($scope.name).then(function(item) {
-				mlCollections.getCollection($scope.name).post(item).then(function() {
+				mlCollection.getResource($scope.name).post(item).then(function() {
 					$scope.reload();
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -125,7 +141,7 @@
 			var item = $scope.itemSelected();
 
 			if(null != item) {
-				mlEditorDialog.open($scope.name, item).then(function(itemUpd) {
+				mlEditorDialog.open($scope.name, Restangular.copy(item)).then(function(itemUpd) {
 					itemUpd.save().then(function() {
 						$scope.reload();
 					}, function(response) {
@@ -141,9 +157,8 @@
 		};
 
 		$scope.remove = function() {
-			var item = $scope.itemSelected();
-
-			if($window.confirm($scope.question_remove)) {			
+			if($window.confirm($scope.question_remove)) {
+				var item = $scope.itemSelected();		
 				if(null != item) {
 					item.remove().then(function() {
 						$scope.reload();
@@ -177,9 +192,9 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlPaginationController', function($scope, mlCollections) {
+	module.controller('mlPaginationController', function($scope, mlCollection) {
 		$scope.page = 1;
 
 		$scope.first = function() {
@@ -188,7 +203,7 @@
 		};
 
 		$scope.next = function() {
-			if($scope.page < mlCollections.getNumberOfPages($scope.name)) {
+			if($scope.page < mlCollection.getNumberOfPages($scope.name)) {
 				$scope.load(++$scope.page);
 			}
 		};
@@ -200,20 +215,20 @@
 		};
 
 		$scope.last = function() {
-			$scope.page = mlCollections.getNumberOfPages($scope.name);
+			$scope.page = mlCollection.getNumberOfPages($scope.name);
 			$scope.load($scope.page);
 		};
 
 		$scope.isFirstPage = function() {
-			return mlCollections.isFirstPage($scope.name);
+			return mlCollection.isFirstPage($scope.name);
 		};
 
 		$scope.isLastPage = function() {
-			return mlCollections.isLastPage($scope.name);
+			return mlCollection.isLastPage($scope.name);
 		};
 
 		$scope.numberOfPages = function() {
-			return mlCollections.getNumberOfPages($scope.name);
+			return mlCollection.getNumberOfPages($scope.name);
 		};
 	});
 	
@@ -221,7 +236,7 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
 	module.directive('mlList', function($templateCache) {
 		var listTemplate = $templateCache.get('mlListTemplate.html');
@@ -240,7 +255,7 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
 	module.directive('mlListSelection', function() {
 		return {
@@ -267,7 +282,7 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
 	module.directive('mlPagination', function() {
 		return {
@@ -281,7 +296,7 @@
 					<md-button ng-click='previous()' ng-disabled='isFirstPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_left</md-icon>\
 					</md-button>\
-					<span>{{ page }} - {{ numberOfPages() }}</span>\
+					<span class='pagination-pages'>{{ page }} - {{ numberOfPages() }}</span>\
 					<md-button ng-click='next()' ng-disabled='isLastPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_right</md-icon>\
 					</md-button>\
@@ -294,7 +309,7 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     /*
      * Filter the simple types of 'input' (text and number)
@@ -316,36 +331,33 @@
 (function(angular) {
 	"use strict";
 
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.factory('mlCollections', function($q, mlResources) {
+	module.factory('mlCollection', function($q, mlResource) {
 		var self = this;
 
-		this.lists = {};
+		this.collections = {};
 
 		var factory = {
+
 			load: function(name, page) {
-				var filters = mlResources.getOptions(name).filters || {},
-					collection = self.lists[name],
+				var filters = mlResource.getOptions(name).filters || {},
+					collection = factory.get(name),
 					deferred = $q.defer();
 
 				if(angular.isDefined(page)) {
 					filters.page = page;
 				}
 
-				if(angular.isUndefined(collection)) {
-					collection = self.lists[name] = [];
-				}
-
-				factory.getCollection(name).getList(filters).then(function(items) {
-					factory.clearCollection(name);
+				factory.getResource(name).getList(filters).then(function(items) {
+					factory.clear(name);
 					collection.metadata = items.metadata;
 					angular.forEach(items, function(item) {
 						factory.addToCollection(name, item);
 					});
 					deferred.resolve(collection);
 				}, function(error) {
-					collection.length = 0;
+					factory.clear(name);
 					deferred.reject(error)
 				});
 
@@ -353,8 +365,8 @@
 			},
 
 			addToCollection: function(name, item) {
-				var collection = self.lists[name];
-				var fields = mlResources.getOptions(name).fields || [];
+				var collection = factory.get(name);
+				var fields = mlResource.getOptions(name).fields || [];
 
 				angular.forEach(fields, function(field) {
 
@@ -362,20 +374,21 @@
 					if('date' == field.type) {
 						item[field.model] = new Date(item[field.model]);
 					}
-
-		            // converts the select fields
-		            /*if(field.type === 'select') {
-		            	item['_'+field.model] = item[field.model];
-		            	item[field.model] = item[field.model]['@id'];
-		            }*/
 				});
 
 				collection.push(item);
 			},
 
-			clearCollection: function(name) {
-				var collection = self.lists[name];
-				collection.length = 0;
+			create: function(name) {
+				self.collections[name] = self.collections[name] || []
+			},
+
+			exist: function(name) {
+				return angular.isDefined(self.collections[name]);
+			},
+
+			clear: function(name) {
+				self.collections[name].length = 0;
 			},
 
 			reload: function(name) {
@@ -385,7 +398,7 @@
 
 			getMetadata: function(name, key) {
 				var value,
-					collection = self.lists[name] || [];
+					collection = factory.get(name);
 
 				if(angular.isDefined(collection.metadata)) {
 					value = collection.metadata[key];
@@ -394,28 +407,26 @@
 				return value;
 			},
 
-			getCollection: function(name) {
-				return mlResources.get(name);
+			getResource: function(name) {
+				return mlResource.get(name);
 			},
 
-			getList: function(name) {
-				if(angular.isUndefined(self.lists[name])) {
-					self.lists[name] = [];
+			get: function(name) {
+				if(angular.isUndefined(self.collections[name])) {
+					factory.create(name);
 				}
-				return self.lists[name];
+				return self.collections[name];
 			},
 
 			getPage: function(name) {
 				var regex = /page=(\d+)/i;
 				var href = factory.getMetadata(name, 'href');
-				var page = 0;
+				var page = 1;
 
 				if(angular.isDefined(href)) {
-					page = 1;
-
 					var results = href.match(regex);
 					if(angular.isArray(results)) {
-						page = results[1];
+						page = parseInt(results[1]);
 					};
 				};
 
@@ -426,6 +437,10 @@
 				var totalItems = factory.getTotalItems(name);
 				var itemsPerPage = factory.getItemsPerPage(name);
 
+				if(0 == itemsPerPage) {
+					return 0;
+				}
+
 				if(
 					angular.isUndefined(totalItems) ||
 					angular.isUndefined(itemsPerPage)
@@ -434,7 +449,7 @@
 				}
 
 				var pages = totalItems / itemsPerPage;
-				var truncated = Math.trunc(pages);
+				var truncated = parseInt(pages, 10);
 
 				return ((pages - truncated) < 0.00001) 
 					? truncated : truncated +1;
@@ -464,9 +479,9 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
-    module.factory('mlEditorDialog', function($rootScope, $mdDialog, $templateCache, mlResources) {
+    module.factory('mlEditorDialog', function($rootScope, $mdDialog, $templateCache, mlResource) {
 
         var template = $templateCache.get('mlEditorTemplate.html');
 
@@ -474,12 +489,12 @@
             open: function(name, item) {
 
                 var isAdding = angular.isUndefined(item);
-                var options = mlResources.getOptions(name);
+                var options = mlResource.getOptions(name);
 
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
-                editorScope.options = mlResources.getOptions(name);
-                editorScope.item = (isAdding) ? mlResources.createResource(name) : item;
+                editorScope.options = mlResource.getOptions(name);
+                editorScope.item = (isAdding) ? mlResource.createResource(name) : item;
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({
@@ -496,7 +511,7 @@
 (function(angular) {
     "use strict";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.factory('mlListDialog', function($rootScope, $mdDialog, $templateCache) {
 
@@ -540,9 +555,9 @@
 
 	"use strict";
 	
-	var module = angular.module('mlResourcesEditor');
+	var module = angular.module('mlResourceEditor');
 
-	module.provider('mlResources', function() {
+	module.provider('mlResource', function() {
 		var resources = this.resources = {};
 		var options = this.options = {};
 		var baseUrl;
@@ -585,10 +600,11 @@
 			                }
 			            }
 
-			            // Populate href property for the collection
-			            populateHref(data);
-
 			            if ('getList' === operation) {
+
+                            // Populate href property for the collection
+                            populateHref(data);
+                            
 			                var collectionResponse = data['hydra:member'];
 			                collectionResponse.metadata = {};
 
@@ -622,6 +638,9 @@
                     });
 
                     angular.forEach(options, function (opts, name) {
+                        if(angular.isUndefined(opts.uri)) {
+                            throw "The uri options must be defined for the "+name+" resource.";
+                        }
                         resources[name] = Restangular.all(opts.uri);
                     });
                 },
@@ -665,18 +684,6 @@
 (function(angular) {
     "use strict";
 
-    /*
-    <div layout=\"row\">\
-        <ui-select ng-model=\"item[field.model]\" theme=\"select2\" style=\"width: 100%;\">\
-            <ui-select-match placeholder=\"{{ field.label }}\">{{ $select.selected.label }}</ui-select-match>\
-            <ui-select-choices repeat=\"option in getOptions(field)\" refresh=\"refreshOptions(field, $select.search)\" refresh-delay=\"0\">\
-                <div ng-bind-html=\"option.label | highlight: $select.search\"></div>\
-            </ui-select-choices>\
-        </ui-select>\
-        <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"26\"></md-progress-circular>\
-    </div>\
-    */
-
      var editorTemplate ="\
         <md-dialog>\
             <md-toolbar>\
@@ -717,7 +724,7 @@
             </md-dialog-content>\
         </md-dialog>";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.run(function($templateCache) {
         $templateCache.put('mlEditorTemplate.html', editorTemplate);
@@ -765,7 +772,7 @@
             <div ml-pagination></div>\
         </div>";
 
-    var module = angular.module('mlResourcesEditor');
+    var module = angular.module('mlResourceEditor');
 
     module.run(function($templateCache) {
         $templateCache.put('mlListTemplate.html', template);
