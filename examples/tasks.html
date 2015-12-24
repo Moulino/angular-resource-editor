@@ -1,9 +1,9 @@
 <!doctype html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.css">
-    <link rel="stylesheet" href="../src/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../src/css/styles.css">
 
     <style>
         #tasks {
@@ -25,40 +25,41 @@
         <div id="tasks" ml-list name="tasks"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-resource.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-animate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-aria.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/0.11.4/angular-material.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular-mocks.js"></script>
-
-    <script src="../src/js/module.js"></script>
-    <script src="../src/js/controllers/editorController.js"></script>
-    <script src="../src/js/controllers/listController.js"></script>
-    <script src="../src/js/directives/listDirective.js"></script>
-    <script src="../src/js/directives/listSelectionDirective.js"></script>
-    <script src="../src/js/directives/paginationDirective.js"></script>
-    <script src="../src/js/filters/inInputTypesFilter.js"></script>
-    <script src="../src/js/services/editorDialogFactory.js"></script>
-    <script src="../src/js/services/resourcesProvider.js"></script>
-    <script src="../src/js/services/listDialogFactory.js"></script>
-    <script src="../src/js/services/resourcesTransformFactory.js"></script>
-    <script src="../src/js/services/utilsFactory.js"></script>
-    <script src="../src/js/templates/editorTemplate.js"></script>
-    <script src="../src/js/templates/listTemplate.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-animate.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-aria.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-messages.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-mocks.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script> <!-- restangular dependency -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/restangular/1.5.1/restangular.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.js"></script>
+    <script type="text/javascript" src="../src/js/module.js"></script>
+    <script type="text/javascript" src="../src/js/controllers/mlListController.js"></script>
+    <script type="text/javascript" src="../src/js/controllers/mlPaginationController.js"></script>
+    <script type="text/javascript" src="../src/js/controllers/mlEditorController.js"></script>
+    <script type="text/javascript" src="../src/js/directives/mlListDirective.js"></script>
+    <script type="text/javascript" src="../src/js/directives/mlListSelectionDirective.js"></script>
+    <script type="text/javascript" src="../src/js/directives/mlPaginationDirective.js"></script>
+    <script type="text/javascript" src="../src/js/services/mlResourceProvider.js"></script>
+    <script type="text/javascript" src="../src/js/services/mlCollectionFactory.js"></script>
+    <script type="text/javascript" src="../src/js/services/mlEditorDialogFactory.js"></script>
+    <script type="text/javascript" src="../src/js/services/mlListDialogFactory.js"></script>
+    <script type="text/javascript" src="../src/js/templates/mlListTemplate.js"></script>
+    <script type="text/javascript" src="../src/js/templates/mlEditorTemplate.js"></script>
+    <script type="text/javascript" src="../src/js/filters/mlInInputTypesFilter.js"></script>
 
     <script>
         (function(angular) {
             var app = angular.module('App', ['mlResourceEditor', 'ngMockE2E']);
 
-            app.config(function($compileProvider, mlResourcesProvider) {
+            app.config(function($compileProvider, mlResourceProvider) {
                 $compileProvider.debugInfoEnabled(true);
 
-                mlResourcesProvider.addResource({
+                mlResourceProvider.setBaseUrl('');
+                mlResourceProvider.addResource({
                     name: 'categories',
-                    url: 'api/categories/:id.json', // for more explains, see angular-resource documentation
-                    url_params: {id: '@id'}, // url parameters for $resource service
+                    uri: 'api/categories', // for more explains, see angular-resource documentation
                     title_list: 'Categories',
                     title_add: 'Add a category',
                     title_edit: 'Edit the category',
@@ -73,10 +74,9 @@
                     ]
                 });
 
-                mlResourcesProvider.addResource({
+                mlResourceProvider.addResource({
                     name: 'tasks',
-                    url: 'api/tasks/:id.json', // for more explains, see angular-resource documentation
-                    url_params: {id: '@id'}, // url parameters for $resource service
+                    uri: 'api/tasks', // for more explains, see angular-resource documentation
                     title_list: 'Tasks',
                     title_add: 'Add a task',
                     title_edit: 'Edit the task',
@@ -87,12 +87,12 @@
                             model: 'category',
                             type: 'select',
                             // to_string is called when displaying the item in table element
-                            to_string: function(item) {
-                                return item.category.name;
+                            to_string: function(category) {
+                                return category.name;
                             },
                             select_resource: {
-                                collection: 'categories', // reference to the category resource
-                                column: 'name' // category member displaying in option node
+                                resource: 'categories', // reference to the category resource
+                                label: 'name' // category member displaying in option node
                             },
                             required: true
                         },
@@ -113,94 +113,275 @@
                 });
             });
 
-            app.run(function(mlResources) {
-                mlResources.init();
+            app.run(function(mlResource) {
+                mlResource.init();
             });
 
             // only for tests (backend server simulation)
-            app.run(function($httpBackend) {
-                var categoryRegex = new RegExp('api/categories/([0-9]+).json');
-                var categoryId = 2;
-                var categories = [
-                    {id: 1, name: 'category1'},
-                    {id: 2, name: 'category2'}
-                ];
+            app.run(function($httpBackend, $location) {
 
-                var taskRegex = new RegExp('api/tasks/([0-9]+).json');
-                var taskId = 5;
-                var tasks = [
-                    {id: 1, name: 'task1', date: '01-01-2015', category: {id: 1, name: 'category1'}},
-                    {id: 2, name: 'task2', date: '02-01-2015', category: {id: 2, name: 'category2'}},
-                    {id: 3, name: 'task3', date: '03-01-2015', category: {id: 1, name: 'category1'}},
-                    {id: 4, name: 'task4', date: '04-01-2015', category: {id: 2, name: 'category2'}},
-                    {id: 5, name: 'task5', date: '05-01-2015', category: {id: 1, name: 'category1'}}
-                ];
+                var EntityManager = function(itemsPerPage) {
+                    this.categoriesCounter = 0;
+                    this.tasksCounter = 0;
+                    this.categories = [];
+                    this.tasks = [];
+                    this.itemsPerPage = itemsPerPage || 15;
 
-                var getCategory = function(id) {
-                    for(var i=0; i<categories.length; i++) {
-                        if(categories[i].id === id) {
-                            return categories[i];
-                        }
+                    this.init();
+                };
+
+                EntityManager.prototype.getItemsPerPage = function() {
+                    return this.itemsPerPage;
+                };
+
+                EntityManager.prototype.getTotalItems = function(entity) {
+                    if(entity === 'categories') {
+                        return this.categories.length;
+                    } else if (entity === 'tasks') {
+                        return this.tasks.length;
+                    } else {
+                        throw "The entity name is wrong";
                     }
                 };
-                var removeCategory = function(id) {
-                    var pos;
-                    for(var i=0; i<categories.length; i++) {
-                        if(categories[i].id === id) {
-                            pos = i;
-                        }
-                    }
-                    categories.splice(pos, 1);
 
-                    // remove associated tasks
-                    angular.forEach(tasks, function(task) {
-                        if(task.category.id == id) {
-                            removeTask(task.id);
+                EntityManager.prototype.getNumberOfPages = function(entity) {
+
+                    var page = 0;
+
+                    if(entity === 'categories') {
+                        page = this.categories.length / this.itemsPerPage;
+                    } else if (entity === 'tasks') {
+                        page = this.tasks.length / this.itemsPerPage;
+                    } else {
+                        throw "The entity name is wrong";
+                    }
+
+                    if(page % 1 != 0) {
+                        return parseInt(page) + 1;
+                    }
+                    return page;
+                };
+
+                EntityManager.prototype.init = function() {
+                    // init categories
+                    for(var i=1; i<=5; i++) {
+                        this.addCategory();
+                    }
+
+                    // init tasks
+                    for(var i=1; i<=60; i++) {
+                        var catId = i/12;
+
+                        if(catId % 1 != 0) {
+                            catId = parseInt(catId, 10) + 1;
+                        }
+
+                        var category = this.getCategoryFromId(catId);
+                        var date = new Date();
+
+                        this.addTask(date, category);
+                    }
+                };
+
+                EntityManager.prototype.addCategory = function(name) {
+                    this.categoriesCounter++;
+                    var category = {
+                        '@id': '/api/categories/'+this.categoriesCounter,
+                        name: name || 'category_'+this.categoriesCounter
+                    };
+                    this.categories.push(category);
+                    return category;
+                };
+
+                EntityManager.prototype.updateCategory = function(uri, name) {
+                    var category = this.getCategory(uri);
+                    category.name = name;
+                    return category;
+                };
+
+                EntityManager.prototype.getCategory = function(uri) {
+                    for(var i=0; i<this.categories.length; i++) {
+                        var category = this.categories[i];
+                        if(category['@id'] === uri) return category;
+                    }
+                };
+
+                EntityManager.prototype.getCategoryFromId = function(id) {
+                    if(angular.isNumber(id)) {
+                        id = '/api/categories/'+id;
+                    }
+                    return this.getCategory(id);
+                };
+
+                EntityManager.prototype.getCategories = function(page) {
+                    var categories = [];
+                    page = page || 1;
+
+                    var delta = this.itemsPerPage * (page - 1);
+
+                    for(var i = delta; i<this.itemsPerPage + delta && i<this.categories.length - delta; i++) {
+                        categories.push(this.categories[i]);
+                    }
+                    return categories;
+                };
+
+                EntityManager.prototype.removeCategory = function(uri) {
+                    var category = this.getCategory(uri);
+                    var idx = this.categories.indexOf(category);
+                    if(idx != -1) {
+                        this.categories.splice(idx, 1);
+                    }
+
+                    var tasksUri = this.getTasksUriFromCategory(uri);
+                    angular.forEach(tasksUri, function(taskUri) {
+                        this.removeTask(taskUri);
+                    });
+                };
+
+                EntityManager.prototype.addTask = function(date, category, name) {
+                    this.tasksCounter++;
+                    var task = {
+                        '@id': '/api/tasks/'+this.tasksCounter,
+                        name: name || 'task_'+this.tasksCounter,
+                        date: date,
+                        category: category
+                    };
+                    this.tasks.push(task);
+                    return task;
+                };
+
+                EntityManager.prototype.updateTask = function(uri, date, category, name) {
+                    var task = this.getTask(uri);
+                    task.date = date;
+                    task.category = category;
+                    task.name = name;
+                    return task;
+                };
+
+                EntityManager.prototype.getTasksUriFromCategory = function(uri) {
+                    var tasks = [];
+                    angular.forEach(this.tasks, function(task) {
+                        if(task.category['@id'] === uri) {
+                            tasks.push(task['@id']);
                         }
                     });
                 };
 
-                var removeTask = function(id) {
-                    var pos;
-                    for(var i=0; i<tasks.length; i++) {
-                        if(tasks[i].id === id) {
-                            pos = i;
-                        }
+                EntityManager.prototype.getTask = function(uri) {
+                    for(var i=0; i<this.tasks.length; i++) {
+                        var task = this.tasks[i];
+                        if(task['@id'] === uri) return task;
                     }
-                    tasks.splice(pos, 1);
                 };
 
-                $httpBackend.whenGET('api/categories.json').respond(categories);
-                $httpBackend.whenPOST('api/categories.json').respond(function(method, url, data) {
-                    var category = angular.fromJson(data);
-                    category.id = ++categoryId;
-                    categories.push(category);
-                    return [200, category, {}];
-                });
-                $httpBackend.whenDELETE(function(url) {
-                    return categoryRegex.test(url);
-                }).respond(function(method, url, data, header) {
-                    var id = url.match(categoryRegex)[1];
-                    removeCategory(id);
-                    return [200];
-                });
+                EntityManager.prototype.getTasks = function(page) {
+                    var tasks = [];
+                    page = page || 1;
 
+                    var delta = this.itemsPerPage * (page - 1);
 
-                $httpBackend.whenGET('api/tasks.json').respond(tasks);
-                $httpBackend.whenPOST('api/tasks.json').respond(function(method, url, data) {
-                    var task = angular.fromJson(data);
-                    task.id = ++taskId;
-                    task.category = getCategory(task.category);
-                    tasks.push(task);
-                    return [200, task, {}];
-                });
-                $httpBackend.whenDELETE(function(url) {
-                    return taskRegex.test(url);
-                }).respond(function(method, url, data, header) {
-                    var id = url.match(taskRegex)[1];
-                    removeTask(id);
-                    return [200];
-                });
+                    var i, counter;
+                    for(i = delta, counter = 0; counter < 15; i++, counter++) {
+                        if(angular.isDefined(this.tasks[i]))
+                            tasks.push(this.tasks[i]);
+                    }
+                    return tasks;
+                };
+
+                EntityManager.prototype.removeTask = function(uri) {
+                    var task = this.getTask(uri);
+                    var idx = this.tasks.indexOf(task);
+                    if(idx != -1) {
+                        this.tasks.splice(idx, 1);
+                    }
+                };
+
+                EntityManager.prototype.createCollectionResponse = function(entityName, page) {
+                    page = page || 1;
+
+                    var items = ('categories' === entityName) ? this.getCategories(page) : this.getTasks(page);
+                    var uri = "/api/"+entityName+"?page=";
+                    var numberOfPages = manager.getNumberOfPages(entityName);
+
+                    var response = {
+                        '@id': uri,
+                        '@type': "hydra:PagedCollection",
+                        'hydra:firstPage': uri + 1,
+                        'hydra:itemsPerPage': manager.getItemsPerPage(),
+                        'hydra:lastPage': uri + numberOfPages,
+                        'hydra:member': items,
+                        'hydra:totalItems': manager.getTotalItems(entityName)
+                    };
+
+                    if(page > 1) {
+                        response['hydra:previousPage'] = uri + (page - 1);
+                    }
+
+                    if(page < numberOfPages) {
+                        response['hydra:nextPage'] = uri + (page + 1);
+                    }
+
+                    return response;
+                };
+
+                var manager = new EntityManager();
+
+                $httpBackend.whenGET(/\/api\/categories/, undefined, undefined, ['page'])
+                    .respond(function(method, url, data, headers, params) {
+                        var response = manager.createCollectionResponse('categories', params.page);
+                        return [200, response];
+                    });
+
+                $httpBackend.whenPOST(/\api\/categories/)
+                    .respond(function(method, url, data, headers, params) {
+                        data = JSON.parse(data);
+
+                        var category = manager.addCategory(data.name);
+                        return [200, category];
+                    });
+
+                $httpBackend.whenPUT(/\/api\/categories\/(.+)/)
+                    .respond(function(method, url, data, headers, params) {
+                        data = JSON.parse(data);
+
+                        var category = manager.updateCategory(url, data.name);
+                        return [200, category];
+                    });
+
+                $httpBackend.whenDELETE(/\/api\/categories\/(.+)/)
+                    .respond(function(method, url, data, headers, params) {
+                        manager.removeCategory(url);
+                        return [200];
+                    });
+
+                $httpBackend.whenGET(/\/api\/tasks/, undefined, undefined, ['page'])
+                    .respond(function(method, url, data, headers, params) {
+                        var response = manager.createCollectionResponse('tasks', params.page);
+                        return [200, response];
+                    });
+
+                $httpBackend.whenPOST(/\/api\/tasks/)
+                    .respond(function(method, url, data, headers, params) {
+                        data = JSON.parse(data);
+
+                        var task = manager.addTask(data.date, data.category, data.name);
+                        return [200, task];
+                    });
+
+                $httpBackend.whenPUT(/\/api\/tasks\/(.+)/)
+                    .respond(function(method, url, data, headers, params) {
+                        data = JSON.parse(data);
+
+                        data.category = manager.getCategory(data.category);
+                        var task = manager.updateTask(url, data.date, data.category, data.name);
+                        return [200, task];
+                    });
+
+                $httpBackend.whenDELETE(/\/api\/tasks\/(.+)/)
+                    .respond(function(method, url, data, headers, params) {
+                        manager.removeTask(url);
+                        return [200];
+                    });
             });
 
             app.controller('BaseController', function($scope, mlListDialog) {
