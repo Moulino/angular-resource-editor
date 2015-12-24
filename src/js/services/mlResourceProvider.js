@@ -47,10 +47,11 @@
 			                }
 			            }
 
-			            // Populate href property for the collection
-			            populateHref(data);
-
 			            if ('getList' === operation) {
+
+                            // Populate href property for the collection
+                            populateHref(data);
+                            
 			                var collectionResponse = data['hydra:member'];
 			                collectionResponse.metadata = {};
 
@@ -84,6 +85,9 @@
                     });
 
                     angular.forEach(options, function (opts, name) {
+                        if(angular.isUndefined(opts.uri)) {
+                            throw "The uri options must be defined for the "+name+" resource.";
+                        }
                         resources[name] = Restangular.all(opts.uri);
                     });
                 },
