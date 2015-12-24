@@ -3,7 +3,7 @@
 
 	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
+	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog, Restangular) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
@@ -58,7 +58,7 @@
 			var item = $scope.itemSelected();
 
 			if(null != item) {
-				mlEditorDialog.open($scope.name, item).then(function(itemUpd) {
+				mlEditorDialog.open($scope.name, Restangular.copy(item)).then(function(itemUpd) {
 					itemUpd.save().then(function() {
 						$scope.reload();
 					}, function(response) {
