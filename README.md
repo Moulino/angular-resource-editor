@@ -11,7 +11,7 @@ It performs the requests to the server through the module '[Restangular](https:/
 
 To improve the ergonomics and the visual rendering, this module depends of [Angular Material](https://material.angularjs.org/latest/) that implements the Google's Material Design.
 
-[Example in JsFiddle](https://jsfiddle.net/moulino/3su98hqt/8/)
+[Example in JsFiddle](https://jsfiddle.net/moulino/3su98hqt/)
 
 This module is still developing. Please, excuse me for my poor english.
 
