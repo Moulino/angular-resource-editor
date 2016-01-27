@@ -23,72 +23,56 @@
             options[name] = opts;
         };
 
-        this.$get = function ($window, $filter, Restangular) {
+        this.$get = function ($window, $filter, $resource) {
 
             var service = {
                 /*
                  * Initializes the resources from the options configured by the 'addResource' function.
                  */
                 init: function () {
-
-                	Restangular.setBaseUrl(baseUrl);
-                    Restangular.setDefaultHeaders(defaultHeaders);
-                	Restangular.setRestangularFields({
-                		id: '@id'
-                	});
-
-                    Restangular.setSelfLinkAbsoluteUrl(false);
-
-                	Restangular.addResponseInterceptor(function (data, operation) {
-			            // Remove trailing slash to make Restangular working
-			            function populateHref(data) {
-			                if (data['@id']) {
-			                    data.href = data['@id'].substring(1);
-			                }
-			            }
-
-			            if ('getList' === operation) {
-
-                            // Populate href property for the collection
-                            populateHref(data);
-                            
-			                var collectionResponse = data['hydra:member'];
-			                collectionResponse.metadata = {};
-
-			                // Put metadata in a property of the collection
-			                angular.forEach(data, function (value, key) {
-			                    if ('hydra:member' !== key) {
-			                        collectionResponse.metadata[key] = value;
-			                    }
-			                });
-
-			                // Populate href property for all elements of the collection
-			                angular.forEach(collectionResponse, function (value) {
-			                    populateHref(value);
-			                });
-
-			                return collectionResponse;
-			            }
-
-			            return data;
-			        });
-
-                    Restangular.addRequestInterceptor(function(element, operation) {
-                        angular.forEach(element, function(val, key) {
-
-                            // convert date in local format
-                            if(angular.isDate(val)) {
-                                element[key] = $filter('date')(val, 'shortDate');
-                            };
-                        });
-                        return element;
-                    });
-
                     angular.forEach(options, function (opts, name) {
                         if(angular.isUndefined(opts.uri)) {
                             throw "The uri options must be defined for the "+name+" resource.";
                         }
-                        resources[name] = Restangular.all(opts.uri);
+                        var url = (angular.isDefined(baseUrl)) ? baseUrl + "/" + opts.uri : opts.uri;
+                        url += "/:slug";
+
+                        resources[name] = $resource(url, {slug: '@id'}, {
+                            query: {
+                                isArray: true,
+                                transformResponse: function(data, headersGetter) {
+                                    var populateId = function(obj) {
+                                        var link = obj['@id'];
+
+                                        if(angular.isDefined(link)) {
+                                            var matches = link.match(/\/(\d+)$/);
+                                            if(matches) {
+                                                obj.id = matches[1];
+                                            }
+                                        }
+                                    };
+
+                                    data = angular.fromJson(data);
+                                    var collectionResponse = data['hydra:member'];
+                                    collectionResponse.metadata = {};
+
+                                    angular.forEach(data, function(value, key) {
+                                        if('hydra:member' !== key) {
+                                            collectionResponse.metadata[key] = value;
+                                        }
+                                    });
+
+                                    angular.forEach(collectionResponse, function(value) {
+                                        populateId(value);
+                                    });
+
+                                    return collectionResponse;
+                                }
+                            },
+                            update: {
+                                method: 'PUT'
+                            }
+                        });
                     });
                 },
 

@@ -19,7 +19,7 @@
 					filters.page = page;
 				}
 
-				factory.getResource(name).getList(filters).then(function(items) {
+				factory.getResource(name).query(filters, function(items) {
 					factory.clear(name);
 					collection.metadata = items.metadata;
 					angular.forEach(items, function(item) {
@@ -28,7 +28,7 @@
 					deferred.resolve(collection);
 				}, function(error) {
 					factory.clear(name);
-					deferred.reject(error)
+					deferred.reject(error);
 				});
 
 				return deferred.promise;
@@ -50,7 +50,7 @@
 			},
 
 			create: function(name) {
-				self.collections[name] = self.collections[name] || []
+				self.collections[name] = self.collections[name] || [];
 			},
 
 			exist: function(name) {
@@ -97,8 +97,8 @@
 					var results = href.match(regex);
 					if(angular.isArray(results)) {
 						page = parseInt(results[1]);
-					};
-				};
+					}
+				}
 
 				return page;
 			},
@@ -107,7 +107,7 @@
 				var totalItems = factory.getTotalItems(name);
 				var itemsPerPage = factory.getItemsPerPage(name);
 
-				if(0 == itemsPerPage) {
+				if(0 === itemsPerPage) {
 					return 0;
 				}
 
@@ -121,8 +121,7 @@
 				var pages = totalItems / itemsPerPage;
 				var truncated = parseInt(pages, 10);
 
-				return ((pages - truncated) < 0.00001) 
-					? truncated : truncated +1;
+				return ((pages - truncated) < 0.00001) ? truncated : truncated +1;
 			},
 
 			getTotalItems: function(name) {

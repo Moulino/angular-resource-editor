@@ -21,7 +21,7 @@
                     scope.$apply();
                 });
 			}
-		}
+		};
 	});
 
 }(angular));

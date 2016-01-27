@@ -2,7 +2,7 @@
 
 	"use strict";
 
-	angular.module('mlResourceEditor', ['restangular', 'ngMaterial']);
+	angular.module('mlResourceEditor', ['ngResource', 'ngMaterial']);
 
 }(angular));
 (function(angular) {
@@ -13,7 +13,7 @@
     var isDefined = angular.isDefined,
         isObject = angular.isObject;
 
-    module.controller('mlEditorController', function($scope, $window, $mdDialog, mlCollection, mlResource) {
+    module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource) {
 
         $scope.fields = mlResource.getOptions($scope.name).fields;
 
@@ -49,33 +49,31 @@
                 isDefined(field.select_resource.label)) 
             {
                 var params = field.select_resource.params || {};
-
                 var itemSelected = $scope.item[field.model];
+                var deferred = $q.defer();
 
-                field.select_options = [];
-                field.loading = true;
-                mlResource.get(field.select_resource.resource).getList(params)
-                    .then(function(response) {
-                        angular.forEach(response, function(item) {
-                            var option = {
-                                label: item[field.select_resource.label],
-                                value: item['@id']
-                            };
+                field.select_options.length = 0;
+                mlResource.get(field.select_resource.resource).query(params, function(response) {
+                    angular.forEach(response, function(item) {
+                        var option = {
+                            label: item[field.select_resource.label],
+                            value: item['@id']
+                        };
 
-                            field.select_options.push(option);
+                        field.select_options.push(option);
 
-                            if(isObject(itemSelected) && itemSelected.hasOwnProperty('@id')) {
-                                if(itemSelected['@id'] === item['@id']) {
-                                    $scope.item[field.model] = item['@id'];
-                                }
+                        if(isObject(itemSelected) && itemSelected.hasOwnProperty('@id')) {
+                            if(itemSelected['@id'] === item['@id']) {
+                                $scope.item[field.model] = item['@id'];
                             }
-                        });
-
-                    }, function(response) {
-                        $window.alert(response['hydra:description']);
-                    }).finally(function() {
-                        field.loading = false;
+                        }
                     });
+                    deferred.resolve();
+                }, function(response) {
+                    $window.alert(response['hydra:description']);
+                    deferred.reject();
+                });
+                return deferred.promise;
             }
         };
     });
@@ -86,7 +84,7 @@
 
 	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog, Restangular) {
+	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
@@ -120,12 +118,12 @@
 		};
 
 		$scope.itemSelected = function() {
-            return ($scope.rowSelected != null) ? $scope.items[$scope.rowSelected] : null;
+            return ($scope.rowSelected !== null) ? $scope.items[$scope.rowSelected] : null;
         };
 
 		$scope.add = function() {
 			mlEditorDialog.open($scope.name).then(function(item) {
-				mlCollection.getResource($scope.name).post(item).then(function() {
+				mlCollection.getResource($scope.name).save(item, function() {
 					$scope.reload();
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -140,9 +138,9 @@
 		$scope.edit = function() {
 			var item = $scope.itemSelected();
 
-			if(null != item) {
-				mlEditorDialog.open($scope.name, Restangular.copy(item)).then(function(itemUpd) {
-					itemUpd.save().then(function() {
+			if(null !== item) {
+				mlEditorDialog.open($scope.name, angular.copy(item)).then(function(itemUpd) {
+					itemUpd.$update(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);
@@ -159,8 +157,8 @@
 		$scope.remove = function() {
 			if($window.confirm($scope.question_remove)) {
 				var item = $scope.itemSelected();		
-				if(null != item) {
-					item.remove().then(function() {
+				if(null !== item) {
+					item.$delete().then(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);
@@ -248,7 +246,7 @@
 				name: '@'
 			},
 			template: listTemplate
-		}
+		};
 	});
 
 }(angular));
@@ -275,10 +273,11 @@
                     scope.$apply();
                 });
 			}
-		}
+		};
 	});
 
 }(angular));
+/*jshint multistr: true */
 (function(angular) {
 	"use strict";
 
@@ -349,7 +348,7 @@
 					filters.page = page;
 				}
 
-				factory.getResource(name).getList(filters).then(function(items) {
+				factory.getResource(name).query(filters, function(items) {
 					factory.clear(name);
 					collection.metadata = items.metadata;
 					angular.forEach(items, function(item) {
@@ -358,7 +357,7 @@
 					deferred.resolve(collection);
 				}, function(error) {
 					factory.clear(name);
-					deferred.reject(error)
+					deferred.reject(error);
 				});
 
 				return deferred.promise;
@@ -380,7 +379,7 @@
 			},
 
 			create: function(name) {
-				self.collections[name] = self.collections[name] || []
+				self.collections[name] = self.collections[name] || [];
 			},
 
 			exist: function(name) {
@@ -427,8 +426,8 @@
 					var results = href.match(regex);
 					if(angular.isArray(results)) {
 						page = parseInt(results[1]);
-					};
-				};
+					}
+				}
 
 				return page;
 			},
@@ -437,7 +436,7 @@
 				var totalItems = factory.getTotalItems(name);
 				var itemsPerPage = factory.getItemsPerPage(name);
 
-				if(0 == itemsPerPage) {
+				if(0 === itemsPerPage) {
 					return 0;
 				}
 
@@ -451,8 +450,7 @@
 				var pages = totalItems / itemsPerPage;
 				var truncated = parseInt(pages, 10);
 
-				return ((pages - truncated) < 0.00001) 
-					? truncated : truncated +1;
+				return ((pages - truncated) < 0.00001) ? truncated : truncated +1;
 			},
 
 			getTotalItems: function(name) {
@@ -508,6 +506,7 @@
     });
 
 }(angular));
+/*jshint multistr: true */
 (function(angular) {
     "use strict";
 
@@ -576,72 +575,56 @@
             options[name] = opts;
         };
 
-        this.$get = function ($window, $filter, Restangular) {
+        this.$get = function ($window, $filter, $resource) {
 
             var service = {
                 /*
                  * Initializes the resources from the options configured by the 'addResource' function.
                  */
                 init: function () {
-
-                	Restangular.setBaseUrl(baseUrl);
-                    Restangular.setDefaultHeaders(defaultHeaders);
-                	Restangular.setRestangularFields({
-                		id: '@id'
-                	});
-
-                    Restangular.setSelfLinkAbsoluteUrl(false);
-
-                	Restangular.addResponseInterceptor(function (data, operation) {
-			            // Remove trailing slash to make Restangular working
-			            function populateHref(data) {
-			                if (data['@id']) {
-			                    data.href = data['@id'].substring(1);
-			                }
-			            }
-
-			            if ('getList' === operation) {
-
-                            // Populate href property for the collection
-                            populateHref(data);
-                            
-			                var collectionResponse = data['hydra:member'];
-			                collectionResponse.metadata = {};
-
-			                // Put metadata in a property of the collection
-			                angular.forEach(data, function (value, key) {
-			                    if ('hydra:member' !== key) {
-			                        collectionResponse.metadata[key] = value;
-			                    }
-			                });
-
-			                // Populate href property for all elements of the collection
-			                angular.forEach(collectionResponse, function (value) {
-			                    populateHref(value);
-			                });
-
-			                return collectionResponse;
-			            }
-
-			            return data;
-			        });
-
-                    Restangular.addRequestInterceptor(function(element, operation) {
-                        angular.forEach(element, function(val, key) {
-
-                            // convert date in local format
-                            if(angular.isDate(val)) {
-                                element[key] = $filter('date')(val, 'shortDate');
-                            };
-                        });
-                        return element;
-                    });
-
                     angular.forEach(options, function (opts, name) {
                         if(angular.isUndefined(opts.uri)) {
                             throw "The uri options must be defined for the "+name+" resource.";
                         }
-                        resources[name] = Restangular.all(opts.uri);
+                        var url = (angular.isDefined(baseUrl)) ? baseUrl + "/" + opts.uri : opts.uri;
+                        url += "/:slug";
+
+                        resources[name] = $resource(url, {slug: '@id'}, {
+                            query: {
+                                isArray: true,
+                                transformResponse: function(data, headersGetter) {
+                                    var populateId = function(obj) {
+                                        var link = obj['@id'];
+
+                                        if(angular.isDefined(link)) {
+                                            var matches = link.match(/\/(\d+)$/);
+                                            if(matches) {
+                                                obj.id = matches[1];
+                                            }
+                                        }
+                                    };
+
+                                    data = angular.fromJson(data);
+                                    var collectionResponse = data['hydra:member'];
+                                    collectionResponse.metadata = {};
+
+                                    angular.forEach(data, function(value, key) {
+                                        if('hydra:member' !== key) {
+                                            collectionResponse.metadata[key] = value;
+                                        }
+                                    });
+
+                                    angular.forEach(collectionResponse, function(value) {
+                                        populateId(value);
+                                    });
+
+                                    return collectionResponse;
+                                }
+                            },
+                            update: {
+                                method: 'PUT'
+                            }
+                        });
                     });
                 },
 
@@ -681,6 +664,7 @@
     });
 }(angular));
 
+/*jshint multistr: true */
 (function(angular) {
     "use strict";
 
@@ -709,6 +693,7 @@
                             </md-select>\
                         </md-input-container>\
                         <div ng-if=\"field.type == 'date'\">\
+                            <label>{{ field.label }}</label>\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
                         </div>\
                         <md-input-container class=\"md-block\" ng-if=\"field.type == 'textarea'\">\
@@ -732,6 +717,7 @@
 
 
 }(angular));
+/*jshint multistr: true */
 (function(angular) {
     'use strict';
 

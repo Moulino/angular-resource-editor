@@ -1,3 +1,4 @@
+/*jshint multistr: true */
 (function(angular) {
     "use strict";
 

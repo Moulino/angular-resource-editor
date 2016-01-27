@@ -13,7 +13,7 @@
 				name: '@'
 			},
 			template: listTemplate
-		}
+		};
 	});
 
 }(angular));

@@ -68,6 +68,13 @@ module.exports = function(grunt) {
                     singleRun: true
                 }
             }
+        },
+        jshint: {
+            beforeconcat: ['src/js/**/*.js'],
+            afterconcat: ['dist/mlResourceEditor.js'],
+            options: {
+                reporter: require('jshint-stylish')
+            }
         }
     });
 
@@ -75,9 +82,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
 
     grunt.registerTask('default', ['dist']);
-    grunt.registerTask('compile', ['concat', 'uglify', 'cssmin']);
+    grunt.registerTask('compile', ['jshint:beforeconcat', 'concat', 'jshint:afterconcat', 'uglify', 'cssmin']);
     grunt.registerTask('test', ['karma:src']);
     grunt.registerTask('test.dist', ['karma:dist']);
 

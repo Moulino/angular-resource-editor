@@ -3,7 +3,7 @@
 
 	var module = angular.module('mlResourceEditor');
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog, Restangular) {
+	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
@@ -37,12 +37,12 @@
 		};
 
 		$scope.itemSelected = function() {
-            return ($scope.rowSelected != null) ? $scope.items[$scope.rowSelected] : null;
+            return ($scope.rowSelected !== null) ? $scope.items[$scope.rowSelected] : null;
         };
 
 		$scope.add = function() {
 			mlEditorDialog.open($scope.name).then(function(item) {
-				mlCollection.getResource($scope.name).post(item).then(function() {
+				mlCollection.getResource($scope.name).save(item, function() {
 					$scope.reload();
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -57,9 +57,9 @@
 		$scope.edit = function() {
 			var item = $scope.itemSelected();
 
-			if(null != item) {
-				mlEditorDialog.open($scope.name, Restangular.copy(item)).then(function(itemUpd) {
-					itemUpd.save().then(function() {
+			if(null !== item) {
+				mlEditorDialog.open($scope.name, angular.copy(item)).then(function(itemUpd) {
+					itemUpd.$update(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);
@@ -76,8 +76,8 @@
 		$scope.remove = function() {
 			if($window.confirm($scope.question_remove)) {
 				var item = $scope.itemSelected();		
-				if(null != item) {
-					item.remove().then(function() {
+				if(null !== item) {
+					item.$delete().then(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response["hydra:description"]);

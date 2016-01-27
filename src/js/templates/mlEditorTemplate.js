@@ -1,3 +1,4 @@
+/*jshint multistr: true */
 (function(angular) {
     "use strict";
 
@@ -26,6 +27,7 @@
                             </md-select>\
                         </md-input-container>\
                         <div ng-if=\"field.type == 'date'\">\
+                            <label>{{ field.label }}</label>\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
                         </div>\
                         <md-input-container class=\"md-block\" ng-if=\"field.type == 'textarea'\">\

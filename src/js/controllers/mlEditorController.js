@@ -6,7 +6,7 @@
     var isDefined = angular.isDefined,
         isObject = angular.isObject;
 
-    module.controller('mlEditorController', function($scope, $window, $mdDialog, mlCollection, mlResource) {
+    module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource) {
 
         $scope.fields = mlResource.getOptions($scope.name).fields;
 
@@ -42,33 +42,31 @@
                 isDefined(field.select_resource.label)) 
             {
                 var params = field.select_resource.params || {};
-
                 var itemSelected = $scope.item[field.model];
+                var deferred = $q.defer();
 
-                field.select_options = [];
-                field.loading = true;
-                mlResource.get(field.select_resource.resource).getList(params)
-                    .then(function(response) {
-                        angular.forEach(response, function(item) {
-                            var option = {
-                                label: item[field.select_resource.label],
-                                value: item['@id']
-                            };
+                field.select_options.length = 0;
+                mlResource.get(field.select_resource.resource).query(params, function(response) {
+                    angular.forEach(response, function(item) {
+                        var option = {
+                            label: item[field.select_resource.label],
+                            value: item['@id']
+                        };
 
-                            field.select_options.push(option);
+                        field.select_options.push(option);
 
-                            if(isObject(itemSelected) && itemSelected.hasOwnProperty('@id')) {
-                                if(itemSelected['@id'] === item['@id']) {
-                                    $scope.item[field.model] = item['@id'];
-                                }
+                        if(isObject(itemSelected) && itemSelected.hasOwnProperty('@id')) {
+                            if(itemSelected['@id'] === item['@id']) {
+                                $scope.item[field.model] = item['@id'];
                             }
-                        });
-
-                    }, function(response) {
-                        $window.alert(response['hydra:description']);
-                    }).finally(function() {
-                        field.loading = false;
+                        }
                     });
+                    deferred.resolve();
+                }, function(response) {
+                    $window.alert(response['hydra:description']);
+                    deferred.reject();
+                });
+                return deferred.promise;
             }
         };
     });
