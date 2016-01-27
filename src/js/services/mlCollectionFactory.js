@@ -21,7 +21,7 @@
 
 				factory.getResource(name).query(filters, function(items) {
 					factory.clear(name);
-					collection.metadata = items.metadata;
+					collection.metadata = items.pop(); // get the metadata object
 					angular.forEach(items, function(item) {
 						factory.addToCollection(name, item);
 					});

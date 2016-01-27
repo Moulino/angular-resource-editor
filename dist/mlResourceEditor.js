@@ -350,7 +350,7 @@
 
 				factory.getResource(name).query(filters, function(items) {
 					factory.clear(name);
-					collection.metadata = items.metadata;
+					collection.metadata = items.pop(); // get the metadata object
 					angular.forEach(items, function(item) {
 						factory.addToCollection(name, item);
 					});
@@ -606,17 +606,19 @@
 
                                     data = angular.fromJson(data);
                                     var collectionResponse = data['hydra:member'];
-                                    collectionResponse.metadata = {};
+                                    var metadata = {};
 
                                     angular.forEach(data, function(value, key) {
                                         if('hydra:member' !== key) {
-                                            collectionResponse.metadata[key] = value;
+                                            metadata[key] = value;
                                         }
                                     });
 
                                     angular.forEach(collectionResponse, function(value) {
                                         populateId(value);
                                     });
+
+                                    collectionResponse.push(metadata); // add the metadata object at the end of the collection
 
                                     return collectionResponse;
                                 }
