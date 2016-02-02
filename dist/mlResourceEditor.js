@@ -52,7 +52,7 @@
                 var itemSelected = $scope.item[field.model];
                 var deferred = $q.defer();
 
-                field.select_options.length = 0;
+                field.select_options = [];
                 mlResource.get(field.select_resource.resource).query(params, function(response) {
                     angular.forEach(response, function(item) {
                         var option = {
