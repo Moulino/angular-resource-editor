@@ -46,7 +46,10 @@
                 var deferred = $q.defer();
 
                 field.select_options = [];
-                mlResource.get(field.select_resource.resource).query(params, function(response) {
+                field.loading = true;
+                var promise = mlResource.get(field.select_resource.resource).query(params).$promise;
+
+                promise.then(function successCallback(response) {
                     angular.forEach(response, function(item) {
                         var option = {
                             label: item[field.select_resource.label],
@@ -62,9 +65,11 @@
                         }
                     });
                     deferred.resolve();
-                }, function(response) {
+                }, function errorCallback(response) {
                     $window.alert(response['hydra:description']);
                     deferred.reject();
+                }).finally(function() {
+                    field.loading = false;
                 });
                 return deferred.promise;
             }

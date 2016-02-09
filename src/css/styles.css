@@ -69,20 +69,31 @@
     color: red;
 }
 
-.ml-editor-title {
-    color: #0088D2;
-    font-weight: bold;
-    font-size: 1.1em;
-    padding-bottom: 10px;
-    border-bottom: 1px solid;
+.ml-editor-template md-select {
+    display: inline-block;
+    min-width: 300px;
+}
+
+.ml-editor-template md-select span {
+    color: gray;
+}
+
+.ml-editor-template md-progress-circular {
+    display: inline-block;
+    vertical-align: bottom;;
+}
+
+.ml-editor-template md-input-container {
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+.ml-editor-template label {
+    color: gray;
 }
 
 md-dialog .md-dialog-content {
     margin-top: 30px;
     min-width: 600px;
     padding: 0 24px 24px;
-}
-
-md-input-container.md-block {
-    margin: 25px 0;
 }

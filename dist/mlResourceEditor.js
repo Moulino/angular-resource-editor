@@ -53,7 +53,10 @@
                 var deferred = $q.defer();
 
                 field.select_options = [];
-                mlResource.get(field.select_resource.resource).query(params, function(response) {
+                field.loading = true;
+                var promise = mlResource.get(field.select_resource.resource).query(params).$promise;
+
+                promise.then(function successCallback(response) {
                     angular.forEach(response, function(item) {
                         var option = {
                             label: item[field.select_resource.label],
@@ -69,9 +72,11 @@
                         }
                     });
                     deferred.resolve();
-                }, function(response) {
+                }, function errorCallback(response) {
                     $window.alert(response['hydra:description']);
                     deferred.reject();
+                }).finally(function() {
+                    field.loading = false;
                 });
                 return deferred.promise;
             }
@@ -671,7 +676,7 @@
     "use strict";
 
      var editorTemplate ="\
-        <md-dialog>\
+        <md-dialog class=\"ml-editor-template\">\
             <md-toolbar>\
                 <div class=\"md-toolbar-tools\">\
                     <span>{{ title }}</span>\
@@ -684,21 +689,22 @@
             <md-dialog-content class=\"md-dialog-content\">\
                 <form>\
                     <div ng-repeat=\"field in fields\">\
-                        <md-input-container class=\"md-block\" ng-if=\"field.type|inInputTypes\">\
+                        <md-input-container ng-if=\"field.type|inInputTypes\">\
                             <label>{{ field.label }}</label>\
                             <input name=\"{{ field.model }}\" type=\"{{ field.type }}\" ng-model=\"item[field.model]\" ng-required=\"field.required === true\"/>\
                         </md-input-container>\
-                        <md-input-container class=\"md-block\" ng-if=\"field.type == 'select'\">\
-                            <label style=\"margin: 5px 0;\">{{ field.label }}</label>\
-                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" md-on-open=\"loadOptions(field)\">\
+                        <md-input-container ng-if=\"field.type == 'select'\">\
+                            <label>{{ field.label }}</label>\
+                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\"\">\
                                 <md-option ng-value=\"option.value\" ng-repeat=\"option in getOptions(field)\">{{ option.label }}</option>\
                             </md-select>\
+                            <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"30\"></md-progress-circular>\
                         </md-input-container>\
                         <div ng-if=\"field.type == 'date'\">\
                             <label>{{ field.label }}</label>\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
                         </div>\
-                        <md-input-container class=\"md-block\" ng-if=\"field.type == 'textarea'\">\
+                        <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
                             <textarea ng-model=\"item[field.model]\" columns=\"1\" md-max-length=\"150\"></textarea>\
                         </md-input-container>\
