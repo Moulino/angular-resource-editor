@@ -22,7 +22,7 @@ module.exports = function(config) {
         'bower_components/angular-animate/angular-animate.min.js',
         'bower_components/angular-aria/angular-aria.min.js',
         'bower_components/angular-sanitize/angular-sanitize.min.js',
-        'bower_components/restangular/dist/restangular.min.js',
+        'bower_components/angular-resource/angular-resource.min.js',
         'bower_components/lodash/lodash.min.js',
         'bower_components/angular-material/angular-material.min.js',
         'bower_components/angular-ui-select/dist/select.min.js',
@@ -69,7 +69,8 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS', 'Firefox', 'Chrome', 'IE9'],
+    //browsers: ['PhantomJS', 'Firefox', 'Chrome', 'IE9'],
+    browsers: ['Chrome'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits

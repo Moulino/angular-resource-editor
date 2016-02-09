@@ -90,7 +90,7 @@
 
 			getPage: function(name) {
 				var regex = /page=(\d+)/i;
-				var href = factory.getMetadata(name, 'href');
+				var href = factory.getMetadata(name, '@id');
 				var page = 1;
 
 				if(angular.isDefined(href)) {

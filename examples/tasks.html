@@ -3,7 +3,7 @@
 <head>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Moulino/angular-resource-editor/1.0/dist/mlResourceEditor.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/Moulino/angular-resource-editor/master/dist/mlResourceEditor.min.css">
 
     <style>
         #tasks {
@@ -30,11 +30,11 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-animate.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-aria.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-messages.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-resource.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.0/angular-mocks.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script> <!-- restangular dependency -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/restangular/1.5.1/restangular.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular-material/1.0.0-rc5/angular-material.js"></script>
-    <script type="text/javascript" src="https://cdn.rawgit.com/Moulino/angular-resource-editor/1.0/dist/mlResourceEditor.min.js"></script>
+    <!--<script type="text/javascript" src="https://cdn.rawgit.com/Moulino/angular-resource-editor/master/dist/mlResourceEditor.js"></script>-->
+    <script type="text/javascript" src="../dist/mlResourceEditor.js"></script>
 
     <script>
         (function(angular) {
@@ -284,14 +284,14 @@
                 };
 
                 EntityManager.prototype.createCollectionResponse = function(entityName, page) {
-                    page = page || 1;
+                    page = parseInt(page) || 1;
 
                     var items = ('categories' === entityName) ? this.getCategories(page) : this.getTasks(page);
                     var uri = "/api/"+entityName+"?page=";
                     var numberOfPages = manager.getNumberOfPages(entityName);
 
                     var response = {
-                        '@id': uri,
+                        '@id': uri + page,
                         '@type': "hydra:PagedCollection",
                         'hydra:firstPage': uri + 1,
                         'hydra:itemsPerPage': manager.getItemsPerPage(),

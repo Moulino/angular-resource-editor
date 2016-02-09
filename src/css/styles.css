@@ -44,11 +44,13 @@
 
 .ml-list-title {
     position: absolute;
-    width: 100%;
-    left: 0;
+    width: 95%;
+    left: 2.5%;
     font-weight: bold;
-    font-size: 1.4em;
+    font-size: 1.1em;
     color: #0088D2;
+    text-align: center;
+    line-height: 40px;
 }
 
 .ml-list-actions .md-button {
