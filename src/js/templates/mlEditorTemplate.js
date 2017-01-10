@@ -31,6 +31,9 @@
                             <label>{{ field.label }}</label>\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
                         </div>\
+                        <div ng-if=\"field.type == 'boolean'\">\
+                            <md-checkbox ng-model='item[field.model]'>{{field.label}}</md-checkbox>\
+                        </div>\
                         <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
                             <textarea ng-model=\"item[field.model]\" columns=\"1\" md-max-length=\"150\"></textarea>\

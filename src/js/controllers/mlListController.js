@@ -99,7 +99,7 @@
 
             return item[field.model];
         };
-
+        
         if(false === $scope.test) {
         	$scope.load();
         }

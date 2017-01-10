@@ -38,8 +38,7 @@
          */
         $scope.loadOptions = function(field) {
             if( isDefined(field.select_resource) &&
-                isDefined(field.select_resource.resource) &&
-                isDefined(field.select_resource.label)) 
+                isDefined(field.select_resource.resource)) 
             {
                 var params = field.select_resource.params || {};
                 var itemSelected = $scope.item[field.model];
@@ -50,9 +49,10 @@
                 var promise = mlResource.get(field.select_resource.resource).query(params).$promise;
 
                 promise.then(function successCallback(response) {
-                    angular.forEach(response, function(item) {
+                    for(var idx = 0; idx < response.length -1; idx++) {
+                        var item = response[idx];
                         var option = {
-                            label: item[field.select_resource.label],
+                            label: field.to_string(item),
                             value: item['@id']
                         };
 
@@ -63,7 +63,7 @@
                                 $scope.item[field.model] = item['@id'];
                             }
                         }
-                    });
+                    };
                     deferred.resolve();
                 }, function errorCallback(response) {
                     $window.alert(response['hydra:description']);

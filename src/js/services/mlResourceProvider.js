@@ -104,6 +104,9 @@
                             else if('text' === field.type) {
                                 item[field.model] = '';
                             }
+                            else if('boolean' === field.type) {
+                                item[field.model] = false;
+                            }
                         }
                     });
                     return item;

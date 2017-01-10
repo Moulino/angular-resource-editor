@@ -45,8 +45,7 @@
          */
         $scope.loadOptions = function(field) {
             if( isDefined(field.select_resource) &&
-                isDefined(field.select_resource.resource) &&
-                isDefined(field.select_resource.label)) 
+                isDefined(field.select_resource.resource)) 
             {
                 var params = field.select_resource.params || {};
                 var itemSelected = $scope.item[field.model];
@@ -57,9 +56,10 @@
                 var promise = mlResource.get(field.select_resource.resource).query(params).$promise;
 
                 promise.then(function successCallback(response) {
-                    angular.forEach(response, function(item) {
+                    for(var idx = 0; idx < response.length -1; idx++) {
+                        var item = response[idx];
                         var option = {
-                            label: item[field.select_resource.label],
+                            label: field.to_string(item),
                             value: item['@id']
                         };
 
@@ -70,7 +70,7 @@
                                 $scope.item[field.model] = item['@id'];
                             }
                         }
-                    });
+                    };
                     deferred.resolve();
                 }, function errorCallback(response) {
                     $window.alert(response['hydra:description']);
@@ -185,7 +185,7 @@
 
             return item[field.model];
         };
-
+        
         if(false === $scope.test) {
         	$scope.load();
         }
@@ -296,7 +296,7 @@
 			controller: 'mlPaginationController',
 			template: "\
 				<div layout='row' layout-sm='column' layout-align='center center' class='ml-pagination'>\
-					<md-button ng-click='first()' ng-disabled='isFirstPage()' class='md-primary'>First</md-button>\
+					<md-button ng-click='first()' ng-disabled='isFirstPage()' class='md-primary'>Début</md-button>\
 					<md-button ng-click='previous()' ng-disabled='isFirstPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_left</md-icon>\
 					</md-button>\
@@ -304,7 +304,7 @@
 					<md-button ng-click='next()' ng-disabled='isLastPage()' class='md-primary md-icon-button'>\
 						<md-icon class='material-icons'>keyboard_arrow_right</md-icon>\
 					</md-button>\
-					<md-button ng-click='last()' ng-disabled='isLastPage()' class='md-primary'>Last</md-button>\
+					<md-button ng-click='last()' ng-disabled='isLastPage()' class='md-primary'>Fin</md-button>\
 				</div>"
 		};
 	});
@@ -479,7 +479,7 @@
 	});
 
 }(angular));
-(function(angular) {
+    (function(angular) {
     "use strict";
 
     var module = angular.module('mlResourceEditor');
@@ -661,6 +661,9 @@
                             else if('text' === field.type) {
                                 item[field.model] = '';
                             }
+                            else if('boolean' === field.type) {
+                                item[field.model] = false;
+                            }
                         }
                     });
                     return item;
@@ -703,6 +706,9 @@
                         <div ng-if=\"field.type == 'date'\">\
                             <label>{{ field.label }}</label>\
                             <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
+                        </div>\
+                        <div ng-if=\"field.type == 'boolean'\">\
+                            <md-checkbox ng-model='item[field.model]'>{{field.label}}</md-checkbox>\
                         </div>\
                         <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
