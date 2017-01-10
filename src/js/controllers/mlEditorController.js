@@ -63,7 +63,7 @@
                                 $scope.item[field.model] = item['@id'];
                             }
                         }
-                    };
+                    }
                     deferred.resolve();
                 }, function errorCallback(response) {
                     $window.alert(response['hydra:description']);
