@@ -92,6 +92,12 @@
     color: gray;
 }
 
+.ml-editor-template .radio p {
+    color: gray;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
 md-dialog .md-dialog-content {
     margin-top: 30px;
     min-width: 600px;

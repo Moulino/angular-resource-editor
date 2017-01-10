@@ -710,6 +710,12 @@
                         <div ng-if=\"field.type == 'boolean'\">\
                             <md-checkbox ng-model='item[field.model]'>{{field.label}}</md-checkbox>\
                         </div>\
+                        <div ng-if=\"field.type == 'radio'\" class='radio'>\
+                            <p>{{field.label}}</p>\
+                            <md-radio-group ng-model='item[field.model]'>\
+                                <md-radio-button ng-repeat='choice in field.choices' value='{{choice.value}}'>{{choice.label}}</md-radio-button>\
+                            </md-radio-group>\
+                        </div>\
                         <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
                             <textarea ng-model=\"item[field.model]\" columns=\"1\" md-max-length=\"150\"></textarea>\
