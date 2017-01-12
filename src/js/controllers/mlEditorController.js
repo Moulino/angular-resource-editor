@@ -66,7 +66,7 @@
                     }
                     deferred.resolve();
                 }, function errorCallback(response) {
-                    $window.alert(response['hydra:description']);
+                    $window.alert(response.data['hydra:description']);
                     deferred.reject();
                 }).finally(function() {
                     field.loading = false;

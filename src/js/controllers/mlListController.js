@@ -48,7 +48,7 @@
 						mlListDialog.open($scope.name);
 					}
 				}, function(response) {
-					$window.alert(response["hydra:description"]);
+					$window.alert(response.data["hydra:description"]);
 					$scope.add();
 				});
 			});
@@ -62,7 +62,7 @@
 					itemUpd.$update(function() {
 						$scope.reload();
 					}, function(response) {
-						$window.alert(response["hydra:description"]);
+						$window.alert(response.data["hydra:description"]);
 						$scope.edit();
 					});
 				}).finally(function() {
@@ -80,7 +80,7 @@
 					item.$delete().then(function() {
 						$scope.reload();
 					}, function(response) {
-						$window.alert(response["hydra:description"]);
+						$window.alert(response.data["hydra:description"]);
 					});
 				}
 			}

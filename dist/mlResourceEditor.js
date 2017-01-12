@@ -73,7 +73,7 @@
                     }
                     deferred.resolve();
                 }, function errorCallback(response) {
-                    $window.alert(response['hydra:description']);
+                    $window.alert(response.data['hydra:description']);
                     deferred.reject();
                 }).finally(function() {
                     field.loading = false;
@@ -134,7 +134,7 @@
 						mlListDialog.open($scope.name);
 					}
 				}, function(response) {
-					$window.alert(response["hydra:description"]);
+					$window.alert(response.data["hydra:description"]);
 					$scope.add();
 				});
 			});
@@ -148,7 +148,7 @@
 					itemUpd.$update(function() {
 						$scope.reload();
 					}, function(response) {
-						$window.alert(response["hydra:description"]);
+						$window.alert(response.data["hydra:description"]);
 						$scope.edit();
 					});
 				}).finally(function() {
@@ -166,7 +166,7 @@
 					item.$delete().then(function() {
 						$scope.reload();
 					}, function(response) {
-						$window.alert(response["hydra:description"]);
+						$window.alert(response.data["hydra:description"]);
 					});
 				}
 			}
@@ -746,7 +746,7 @@
             <table ml-list-selection>\
                 <span ng-if='mode != \"dialog\"' class='ml-list-title'>{{ title_list || '' }}</span>\
                 <caption>\
-                    <div layout='row' layout-align='end center' class='ml-list-actions'>\
+                    <div ng-if='write_access' layout='row' layout-align='end center' class='ml-list-actions'>\
                         <md-button ng-click='add()' class='md-icon-button green'>\
                             <md-icon class='material-icons'>add</md-icon>\
                         </md-button>\
