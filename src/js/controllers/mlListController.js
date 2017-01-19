@@ -41,16 +41,20 @@
         };
 
 		$scope.add = function() {
-			mlEditorDialog.open($scope.name).then(function(item) {
+			mlEditorDialog.open($scope.name).then(function successCallback(item) {
 				mlCollection.getResource($scope.name).save(item, function() {
 					$scope.reload();
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
 					}
 				}, function(response) {
-					$window.alert(response.data["hydra:description"]);
+					alert(response.data["hydra:description"]);
 					$scope.add();
 				});
+			}, function cancelCallback() {
+				if(isDialog()) {
+					mlListDialog.open($scope.name);
+				}
 			});
 		};
 
@@ -58,14 +62,14 @@
 			var item = $scope.itemSelected();
 
 			if(null !== item) {
-				mlEditorDialog.open($scope.name, angular.copy(item)).then(function(itemUpd) {
+				mlEditorDialog.open($scope.name, angular.copy(item)).then(function successCallback(itemUpd) {
 					itemUpd.$update(function() {
 						$scope.reload();
 					}, function(response) {
 						$window.alert(response.data["hydra:description"]);
 						$scope.edit();
 					});
-				}).finally(function() {
+				}, function cancelCallback() {
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
 					}

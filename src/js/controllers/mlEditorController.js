@@ -6,8 +6,7 @@
     var isDefined = angular.isDefined,
         isObject = angular.isObject;
 
-    module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource) {
-
+    module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource, mlEditorDialog) {
         $scope.fields = mlResource.getOptions($scope.name).fields;
 
         $scope.ok = function() {
@@ -73,6 +72,11 @@
                 });
                 return deferred.promise;
             }
+        };
+
+        $scope.addSubResource = function(name) {
+            console.log("Ajout d'une nouvelle resource de type "+name);
+            mlEditorDialog.open(name);
         };
     });
 

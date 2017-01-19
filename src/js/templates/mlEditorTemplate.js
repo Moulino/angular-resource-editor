@@ -22,14 +22,17 @@
                         </md-input-container>\
                         <md-input-container ng-if=\"field.type == 'select'\">\
                             <label>{{ field.label }}</label>\
-                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\"\">\
+                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" required md-no-asterisk=\"false\">\
                                 <md-option ng-value=\"option.value\" ng-repeat=\"option in getOptions(field)\">{{ option.label }}</option>\
                             </md-select>\
                             <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"30\"></md-progress-circular>\
+                            <md-button ng-click='addSubResource(field.select_resource.resource)' class='md-icon-button green'>\
+                                <md-icon class='material-icons'>add</md-icon>\
+                            </md-button>\
                         </md-input-container>\
                         <div ng-if=\"field.type == 'date'\">\
                             <label>{{ field.label }}</label>\
-                            <md-datepicker ng-model=\"item[field.model]\" md-placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
+                            <md-datepicker ng-model=\"item[field.model]\" placeholder=\"{{ field.label }}\" ng-required=\"field.required === true\" aria-label=\"datetime\"></md-datepicker>\
                         </div>\
                         <div ng-if=\"field.type == 'boolean'\">\
                             <md-checkbox ng-model='item[field.model]'>{{field.label}}</md-checkbox>\
