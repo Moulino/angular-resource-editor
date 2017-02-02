@@ -30,12 +30,18 @@
                  * Initializes the resources from the options configured by the 'addResource' function.
                  */
                 init: function () {
+                    var defaultOptions = {
+                        write_access: true
+                    };
+
                     angular.forEach(options, function (opts, name) {
                         if(angular.isUndefined(opts.uri)) {
                             throw "The uri options must be defined for the "+name+" resource.";
                         }
                         var url = (angular.isDefined(baseUrl)) ? baseUrl + "/" + opts.uri : opts.uri;
                         url += "/:slug";
+
+                        angular.extend(opts, defaultOptions);
 
                         resources[name] = $resource(url, {slug: '@id'}, {
                             query: {
