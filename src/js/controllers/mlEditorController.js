@@ -8,9 +8,34 @@
 
     module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource, mlEditorDialog) {
         $scope.fields = mlResource.getOptions($scope.name).fields;
+        $scope.remoteErrors = {};
 
         $scope.ok = function() {
-            $mdDialog.hide($scope.item);
+            var resource = mlCollection.getResource($scope.name);
+
+            var promise = (isDefined($scope.item.id)) ? resource.update($scope.item.id, $scope.item).$promise : resource.save($scope.item).$promise;
+
+            promise.then(function successCallback() {
+                $mdDialog.hide($scope.item);
+            }, function errorCallback(response) {
+                if(response.data.hasOwnProperty('violations')) {
+                    var remoteErrors = $scope.remoteErrors;
+                    var i;
+
+                    for(i=0; i<$scope.fields.length; i++) {
+                        var field = $scope.fields[i];
+                        $scope.remoteErrors[field.model] = {};
+                    }
+
+                    for(i=0; i<response.data.violations.length; i++) {
+                        var violation = response.data.violations[i];
+                        $scope.remoteErrors[violation.propertyPath]['error_' + i.toString()] = violation.message;
+                    }
+
+                } else {
+                    alert(response.data['hydra:description']);
+                }
+            });
         };
 
         $scope.cancel = function() {

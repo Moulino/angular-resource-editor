@@ -2,19 +2,23 @@
 	"use strict";
 
 	var module = angular.module('mlResourceEditor');
+	var isDefined = angular.isDefined;
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
+	module.controller('mlListController', function($scope, $window, $filter, $templateCache, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
 		$scope.mode = $scope.mode || 'inline';
 		$scope.test = $scope.test || false; // for tests only
+		$scope.autoloading = isDefined($scope.autoloading) ? $scope.autoloading : true; // use for disable autoloading
 		
 		angular.merge($scope, mlResource.getOptions($scope.name));
 
 		var isDialog = function() {
 			return $scope.mode === 'dialog';
 		};
+
+		$scope.isDialog = isDialog;
 
 		$scope.load = function(page) {
 			page = page || 1;
@@ -40,17 +44,12 @@
             return ($scope.rowSelected !== null) ? $scope.items[$scope.rowSelected] : null;
         };
 
-		$scope.add = function() {
-			mlEditorDialog.open($scope.name).then(function successCallback(item) {
-				mlCollection.getResource($scope.name).save(item, function() {
-					$scope.reload();
-					if(isDialog()) {
-						mlListDialog.open($scope.name);
-					}
-				}, function(response) {
-					alert(response.data["hydra:description"]);
-					$scope.add();
-				});
+		$scope.add = function(reopen) {
+			mlEditorDialog.open($scope.name).then(function okCallback() {
+				$scope.reload();
+				if(isDialog()) {
+					mlListDialog.open($scope.name);
+				}
 			}, function cancelCallback() {
 				if(isDialog()) {
 					mlListDialog.open($scope.name);
@@ -62,13 +61,11 @@
 			var item = $scope.itemSelected();
 
 			if(null !== item) {
-				mlEditorDialog.open($scope.name, angular.copy(item)).then(function successCallback(itemUpd) {
-					itemUpd.$update(function() {
-						$scope.reload();
-					}, function(response) {
-						$window.alert(response.data["hydra:description"]);
-						$scope.edit();
-					});
+				mlEditorDialog.open($scope.name, angular.copy(item)).then(function okCallback(itemUpd) {
+					$scope.reload();
+					if(isDialog()) {
+						mlListDialog.open($scope.name);
+					}
 				}, function cancelCallback() {
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -104,7 +101,7 @@
             return item[field.model];
         };
         
-        if(false === $scope.test) {
+        if(false === $scope.test && true === $scope.autoloading) {
         	$scope.load();
         }
 	});

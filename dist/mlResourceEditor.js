@@ -15,9 +15,34 @@
 
     module.controller('mlEditorController', function($scope, $q, $window, $mdDialog, mlCollection, mlResource, mlEditorDialog) {
         $scope.fields = mlResource.getOptions($scope.name).fields;
+        $scope.remoteErrors = {};
 
         $scope.ok = function() {
-            $mdDialog.hide($scope.item);
+            var resource = mlCollection.getResource($scope.name);
+
+            var promise = (isDefined($scope.item.id)) ? resource.update($scope.item.id, $scope.item).$promise : resource.save($scope.item).$promise;
+
+            promise.then(function successCallback() {
+                $mdDialog.hide($scope.item);
+            }, function errorCallback(response) {
+                if(response.data.hasOwnProperty('violations')) {
+                    var remoteErrors = $scope.remoteErrors;
+                    var i;
+
+                    for(i=0; i<$scope.fields.length; i++) {
+                        var field = $scope.fields[i];
+                        $scope.remoteErrors[field.model] = {};
+                    }
+
+                    for(i=0; i<response.data.violations.length; i++) {
+                        var violation = response.data.violations[i];
+                        $scope.remoteErrors[violation.propertyPath]['error_' + i.toString()] = violation.message;
+                    }
+
+                } else {
+                    alert(response.data['hydra:description']);
+                }
+            });
         };
 
         $scope.cancel = function() {
@@ -92,19 +117,23 @@
 	"use strict";
 
 	var module = angular.module('mlResourceEditor');
+	var isDefined = angular.isDefined;
 
-	module.controller('mlListController', function($scope, $window, $filter, mlCollection, mlResource, mlEditorDialog, mlListDialog, mlWindowDialog) {
+	module.controller('mlListController', function($scope, $window, $filter, $templateCache, mlCollection, mlResource, mlEditorDialog, mlListDialog) {
 		$scope.items = [];
 		$scope.rowSelected = null;
 
 		$scope.mode = $scope.mode || 'inline';
 		$scope.test = $scope.test || false; // for tests only
+		$scope.autoloading = isDefined($scope.autoloading) ? $scope.autoloading : true; // use for disable autoloading
 		
 		angular.merge($scope, mlResource.getOptions($scope.name));
 
 		var isDialog = function() {
 			return $scope.mode === 'dialog';
 		};
+
+		$scope.isDialog = isDialog;
 
 		$scope.load = function(page) {
 			page = page || 1;
@@ -130,17 +159,12 @@
             return ($scope.rowSelected !== null) ? $scope.items[$scope.rowSelected] : null;
         };
 
-		$scope.add = function() {
-			mlEditorDialog.open($scope.name).then(function successCallback(item) {
-				mlCollection.getResource($scope.name).save(item, function() {
-					$scope.reload();
-					if(isDialog()) {
-						mlListDialog.open($scope.name);
-					}
-				}, function(response) {
-					mlWindowDialog.error(response.data['hydra:title'], response.data["hydra:description"]);
-					$scope.add();
-				});
+		$scope.add = function(reopen) {
+			mlEditorDialog.open($scope.name).then(function okCallback() {
+				$scope.reload();
+				if(isDialog()) {
+					mlListDialog.open($scope.name);
+				}
 			}, function cancelCallback() {
 				if(isDialog()) {
 					mlListDialog.open($scope.name);
@@ -152,13 +176,11 @@
 			var item = $scope.itemSelected();
 
 			if(null !== item) {
-				mlEditorDialog.open($scope.name, angular.copy(item)).then(function successCallback(itemUpd) {
-					itemUpd.$update(function() {
-						$scope.reload();
-					}, function(response) {
-						$window.alert(response.data["hydra:description"]);
-						$scope.edit();
-					});
+				mlEditorDialog.open($scope.name, angular.copy(item)).then(function okCallback(itemUpd) {
+					$scope.reload();
+					if(isDialog()) {
+						mlListDialog.open($scope.name);
+					}
 				}, function cancelCallback() {
 					if(isDialog()) {
 						mlListDialog.open($scope.name);
@@ -194,7 +216,7 @@
             return item[field.model];
         };
         
-        if(false === $scope.test) {
+        if(false === $scope.test && true === $scope.autoloading) {
         	$scope.load();
         }
 	});
@@ -352,16 +374,18 @@
 
 		var factory = {
 
-			load: function(name, page) {
-				var filters = mlResource.getOptions(name).filters || {},
+			load: function(name, page, params) {
+				var parameters = mlResource.getOptions(name).filters || {},
 					collection = factory.get(name),
 					deferred = $q.defer();
 
 				if(angular.isDefined(page)) {
-					filters.page = page;
+					parameters.page = page;
 				}
 
-				factory.getResource(name).query(filters, function(items) {
+				angular.extend(parameters, params);
+
+				factory.getResource(name).query(parameters, function(items) {
 					factory.clear(name);
 					collection.metadata = items.pop(); // get the metadata object
 					angular.forEach(items, function(item) {
@@ -499,20 +523,27 @@
         return {
             open: function(name, item) {
 
-                var isAdding = angular.isUndefined(item);
+                var isAdding = true;
+
+                if(angular.isDefined(item)) {
+                    if(angular.isDefined(item.id)) {
+                        isAdding = false;
+                    }
+                }
                 var options = mlResource.getOptions(name);
 
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
                 editorScope.options = mlResource.getOptions(name);
-                editorScope.item = (isAdding) ? mlResource.createResource(name) : item;
+                editorScope.item = angular.extend({}, mlResource.createResource(name), item);
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({
                     template: template,
                     controller: 'mlEditorController',
                     scope: editorScope,
-                    clickOutsideToClose: true
+                    clickOutsideToClose: true,
+                    preserveScope: true
                 });
             }
         };
@@ -595,12 +626,18 @@
                  * Initializes the resources from the options configured by the 'addResource' function.
                  */
                 init: function () {
+                    var defaultOptions = {
+                        write_access: true
+                    };
+
                     angular.forEach(options, function (opts, name) {
                         if(angular.isUndefined(opts.uri)) {
                             throw "The uri options must be defined for the "+name+" resource.";
                         }
                         var url = (angular.isDefined(baseUrl)) ? baseUrl + "/" + opts.uri : opts.uri;
                         url += "/:slug";
+
+                        angular.extend(opts, defaultOptions);
 
                         resources[name] = $resource(url, {slug: '@id'}, {
                             query: {
@@ -682,30 +719,6 @@
     });
 }(angular));
 
-(function(angular) {
-	'use strict';
-
-	var module = angular.module('mlResourceEditor');
-
-	module.factory('mlWindowDialog', function($mdDialog) {
-		return {
-			error: function(title, message) {
-				$mdDialog.show(
-					$mdDialog.alert({
-						title: title,
-						textContent: message,
-						ok: 'Fermer',
-						focusOnOpen: true
-					})
-				);
-			},
-
-			confirm: function($question) {
-
-			}
-		}
-	});
-}(angular));
 /*jshint multistr: true */
 (function(angular) {
     "use strict";
@@ -722,15 +735,20 @@
                 </div>\
             </md-toolbar>\
             <md-dialog-content class=\"md-dialog-content\">\
-                <form>\
+                <form name=\"editor\">\
                     <div ng-repeat=\"field in fields\">\
-                        <md-input-container ng-if=\"field.type|inInputTypes\">\
+                        <md-input-container ng-if=\"field.type|inInputTypes\" md-auto-hide=\"false\">\
                             <label>{{ field.label }}</label>\
-                            <input name=\"{{ field.model }}\" type=\"{{ field.type }}\" ng-model=\"item[field.model]\" ng-required=\"field.required === true\"/>\
+                            <input name=\"{{ field.model }}\" type=\"{{ field.type }}\" ng-model=\"item[field.model]\" ng-required=\"field.ng-required\"/>\
+                            <div ng-messages = \"remoteErrors.{{ field.model }}\" ng-hide=\"remoteErrors[field.model].length\">\
+                                <div ng-repeat=\"(type, message) in remoteErrors[field.model]\" ng-message=\"{{ type }}\">\
+                                    {{ message }}\
+                                </div>\
+                            </div>\
                         </md-input-container>\
                         <md-input-container ng-if=\"field.type == 'select'\">\
                             <label>{{ field.label }}</label>\
-                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" required md-no-asterisk=\"false\">\
+                            <md-select name=\"{{ field.model }}\" ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" required md-no-asterisk=\"false\">\
                                 <md-option ng-value=\"option.value\" ng-repeat=\"option in getOptions(field)\">{{ option.label }}</option>\
                             </md-select>\
                             <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"30\"></md-progress-circular>\
@@ -754,6 +772,9 @@
                         <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
                             <textarea ng-model=\"item[field.model]\" columns=\"1\" md-max-length=\"150\"></textarea>\
+                            <div ng-messages=\"editor-form.{{ field.model }}.$error\">\
+                                <div ng-message=\"required\">Ce champs est requis</div>\
+                            </div>\
                         </md-input-container>\
                     </div>\
                     <md-dialog-actions>\

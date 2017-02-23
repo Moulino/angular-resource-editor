@@ -10,16 +10,18 @@
 
 		var factory = {
 
-			load: function(name, page) {
-				var filters = mlResource.getOptions(name).filters || {},
+			load: function(name, page, params) {
+				var parameters = mlResource.getOptions(name).filters || {},
 					collection = factory.get(name),
 					deferred = $q.defer();
 
 				if(angular.isDefined(page)) {
-					filters.page = page;
+					parameters.page = page;
 				}
 
-				factory.getResource(name).query(filters, function(items) {
+				angular.extend(parameters, params);
+
+				factory.getResource(name).query(parameters, function(items) {
 					factory.clear(name);
 					collection.metadata = items.pop(); // get the metadata object
 					angular.forEach(items, function(item) {

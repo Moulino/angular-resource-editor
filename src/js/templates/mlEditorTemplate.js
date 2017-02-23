@@ -14,15 +14,20 @@
                 </div>\
             </md-toolbar>\
             <md-dialog-content class=\"md-dialog-content\">\
-                <form>\
+                <form name=\"editor\">\
                     <div ng-repeat=\"field in fields\">\
-                        <md-input-container ng-if=\"field.type|inInputTypes\">\
+                        <md-input-container ng-if=\"field.type|inInputTypes\" md-auto-hide=\"false\">\
                             <label>{{ field.label }}</label>\
-                            <input name=\"{{ field.model }}\" type=\"{{ field.type }}\" ng-model=\"item[field.model]\" ng-required=\"field.required === true\"/>\
+                            <input name=\"{{ field.model }}\" type=\"{{ field.type }}\" ng-model=\"item[field.model]\" ng-required=\"field.ng-required\"/>\
+                            <div ng-messages = \"remoteErrors.{{ field.model }}\" ng-hide=\"remoteErrors[field.model].length\">\
+                                <div ng-repeat=\"(type, message) in remoteErrors[field.model]\" ng-message=\"{{ type }}\">\
+                                    {{ message }}\
+                                </div>\
+                            </div>\
                         </md-input-container>\
                         <md-input-container ng-if=\"field.type == 'select'\">\
                             <label>{{ field.label }}</label>\
-                            <md-select ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" required md-no-asterisk=\"false\">\
+                            <md-select name=\"{{ field.model }}\" ng-init=\"loadOptions(field)\" placeholder=\"{{ field.label }}\" ng-model=\"item[field.model]\" required md-no-asterisk=\"false\">\
                                 <md-option ng-value=\"option.value\" ng-repeat=\"option in getOptions(field)\">{{ option.label }}</option>\
                             </md-select>\
                             <md-progress-circular ng-show=\"field.loading\" md-mode=\"indeterminate\" md-diameter=\"30\"></md-progress-circular>\
@@ -46,6 +51,9 @@
                         <md-input-container ng-if=\"field.type == 'textarea'\">\
                             <label>{{ field.label }}</label>\
                             <textarea ng-model=\"item[field.model]\" columns=\"1\" md-max-length=\"150\"></textarea>\
+                            <div ng-messages=\"editor-form.{{ field.model }}.$error\">\
+                                <div ng-message=\"required\">Ce champs est requis</div>\
+                            </div>\
                         </md-input-container>\
                     </div>\
                     <md-dialog-actions>\

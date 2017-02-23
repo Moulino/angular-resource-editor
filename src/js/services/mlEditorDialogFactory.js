@@ -10,20 +10,27 @@
         return {
             open: function(name, item) {
 
-                var isAdding = angular.isUndefined(item);
+                var isAdding = true;
+
+                if(angular.isDefined(item)) {
+                    if(angular.isDefined(item.id)) {
+                        isAdding = false;
+                    }
+                }
                 var options = mlResource.getOptions(name);
 
                 var editorScope = $rootScope.$new(true);
                 editorScope.name = name;
                 editorScope.options = mlResource.getOptions(name);
-                editorScope.item = (isAdding) ? mlResource.createResource(name) : item;
+                editorScope.item = angular.extend({}, mlResource.createResource(name), item);
                 editorScope.title = (isAdding) ? options.title_add : options.title_edit;
 
                 return $mdDialog.show({
                     template: template,
                     controller: 'mlEditorController',
                     scope: editorScope,
-                    clickOutsideToClose: true
+                    clickOutsideToClose: true,
+                    preserveScope: true
                 });
             }
         };
